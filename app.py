@@ -334,14 +334,14 @@ if not st.session_state["logged_in"]:
 {EUCALYPTUS_SVG}
 </div>""", unsafe_allow_html=True)
     
-    tab_login, tab_register = st.tabs(["🔑 Login Masuk", "📝 Pendaftaran User"])
+    tab_login, tab_register = st.tabs(["Login Masuk", "Pendaftaran User"])
     
     with tab_login:
-        st.subheader("Akses Akun Operasional")
+        st.subheader("Monitoring Harian Kerja")
         with st.form("form_login"):
             pj_input = st.text_input("Username")
             kode_input = st.text_input("Password", type="password")
-            btn_login = st.form_submit_button("🔑 MASUK KE SISTEM", use_container_width=True)
+            btn_login = st.form_submit_button("Masuk", use_container_width=True)
             
             if btn_login:
                 if not pj_input.strip() or not kode_input.strip():
@@ -369,9 +369,9 @@ if not st.session_state["logged_in"]:
     with tab_register:
         st.subheader("Registrasi User Baru")
         with st.form("form_register"):
-            reg_pj = st.text_input("Username *", placeholder="Contoh: Rezki Difan Arshaf")
+            reg_pj = st.text_input("Username *", placeholder="Contoh: Example")
             reg_kode = st.text_input("Buat Password *", type="password", placeholder="Minimal 4 karakter")
-            btn_reg = st.form_submit_button("📝 DAFTAR AKUN BARU", use_container_width=True)
+            btn_reg = st.form_submit_button("Daftar", use_container_width=True)
             
             if btn_reg:
                 if not reg_pj.strip() or not reg_kode.strip():
