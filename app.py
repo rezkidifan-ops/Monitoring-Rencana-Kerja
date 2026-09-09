@@ -7,11 +7,11 @@ from streamlit_gsheets import GSheetsConnection
 # 🔗 KONFIGURASI URL GOOGLE SHEET
 # Silakan ganti string di bawah ini dengan URL Google Sheet Anda
 # =========================================================
-SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1qJMHdTkURQV7LQE_DfO3UiX_txepHVCXqRct3mrQlxs/edit?usp=drivesdk"
+SPREADSHEET_URL = "MASUKKAN_URL_GOOGLE_SHEET_ANDA_DI_SINI"
 
 # 1. PENGATURAN HALAMAN
 st.set_page_config(
-    page_title="EucaSystem - We Care We Do We Win", 
+    page_title="HTI Eucalyptus - We Care We Do We Win", 
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -237,14 +237,14 @@ div[data-testid="stDataFrame"] {
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 COLUMNS = [
-    "No", "ID Petak", "SPK", "Jenis Kegiatan", "Luas", "Penanggung Jawab",
+    "No", "ID Petak", "SPK", "Jenis Kegiatan", "Luas", "Username",
     "Tanggal Rencana Kerja", "Tanggal Mulai Bekerja", "Tanggal Selesai Kerja",
     "Rencana Tenaga Kerja", "Actual Tenaga Kerja", "Rencana Produktivitas",
     "Actual Produktivitas", "Produktivitas Sampai Hari ini", 
     "Sisa luas belum dikerjakan", "Rincian"
 ]
 
-USER_COLUMNS = ["Penanggung Jawab", "Kode Unik", "Role"]
+USER_COLUMNS = ["Username", "Password", "Role"]
 
 def safe_gsheets_update(worksheet_name, data_df):
     try:
@@ -261,6 +261,11 @@ def load_data():
         df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", ttl=0)
         if df is None or df.empty:
             return pd.DataFrame(columns=COLUMNS)
+            
+        # Penyesuaian jika sheet masih menggunakan header lama "Penanggung Jawab"
+        if "Penanggung Jawab" in df.columns and "Username" not in df.columns:
+            df.rename(columns={"Penanggung Jawab": "Username"}, inplace=True)
+            
         for col in COLUMNS:
             if col not in df.columns:
                 df[col] = None
@@ -274,13 +279,22 @@ def load_users():
         if df_users is None or df_users.empty:
             return pd.DataFrame(columns=USER_COLUMNS)
             
+        # Penyesuaian jika sheet "Users" masih menggunakan header lama
+        rename_map = {}
+        if "Penanggung Jawab" in df_users.columns:
+            rename_map["Penanggung Jawab"] = "Username"
+        if "Kode Unik" in df_users.columns:
+            rename_map["Kode Unik"] = "Password"
+        if rename_map:
+            df_users.rename(columns=rename_map, inplace=True)
+            
         for col in USER_COLUMNS:
             if col not in df_users.columns:
                 df_users[col] = "User" if col == "Role" else None
         
-        # Pembersihan Teks & Perbaikan Format Kode Unik
-        df_users["Penanggung Jawab"] = df_users["Penanggung Jawab"].astype(str).str.strip()
-        df_users["Kode Unik"] = df_users["Kode Unik"].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+        # Pembersihan Teks & Perbaikan Format Password
+        df_users["Username"] = df_users["Username"].astype(str).str.strip()
+        df_users["Password"] = df_users["Password"].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
         return df_users[USER_COLUMNS]
     except Exception as e:
         return pd.DataFrame(columns=USER_COLUMNS)
@@ -320,22 +334,22 @@ if not st.session_state["logged_in"]:
 {EUCALYPTUS_SVG}
 </div>""", unsafe_allow_html=True)
     
-    tab_login, tab_register = st.tabs(["Login", "Sign"])
+    tab_login, tab_register = st.tabs(["🔑 Login Masuk", "📝 Pendaftaran User"])
     
     with tab_login:
-        st.subheader("Akses Kegiatan Anda")
+        st.subheader("Akses Akun Operasional")
         with st.form("form_login"):
             pj_input = st.text_input("Username")
             kode_input = st.text_input("Password", type="password")
-            btn_login = st.form_submit_button("Login", use_container_width=True)
+            btn_login = st.form_submit_button("🔑 MASUK KE SISTEM", use_container_width=True)
             
             if btn_login:
                 if not pj_input.strip() or not kode_input.strip():
-                    st.error("❌ Username dan Password salah atau tidak sesuai")
+                    st.error("❌ Username dan Password wajib diisi!")
                 else:
                     df_users = load_users()
                     if not df_users.empty:
-                        # Pencocokan nama (case-insensitive) dan Kode Unik
+                        # Pencocokan Username (case-insensitive) dan Password
                         matched = df_users[
                             (df_users["Username"].str.upper() == pj_input.strip().upper()) &
                             (df_users["Password"] == kode_input.strip())
@@ -348,16 +362,16 @@ if not st.session_state["logged_in"]:
                             st.success(f"Selamat datang kembali, {st.session_state['user_pj']}!")
                             st.rerun()
                         else:
-                            st.error("❌ Nama Username atau Password salah!")
+                            st.error("❌ Username atau Password salah!")
                     else:
-                        st.error("❌ Tidak ada akun terdaftar, Silakan sign terlebih dahulu")
+                        st.error("❌ Belum ada akun terdaftar di database. Silakan daftarkan akun baru di tab Pendaftaran!")
 
     with tab_register:
-        st.subheader("Username/PIC")
+        st.subheader("Registrasi User Baru")
         with st.form("form_register"):
-            reg_pj = st.text_input("Nama", placeholder="Contoh: Example")
-            reg_kode = st.text_input("Password", type="Example", placeholder="Minimal 4 karakter")
-            btn_reg = st.form_submit_button("Daftar", use_container_width=True)
+            reg_pj = st.text_input("Username *", placeholder="Contoh: Rezki Difan Arshaf")
+            reg_kode = st.text_input("Buat Password *", type="password", placeholder="Minimal 4 karakter")
+            btn_reg = st.form_submit_button("📝 DAFTAR AKUN BARU", use_container_width=True)
             
             if btn_reg:
                 if not reg_pj.strip() or not reg_kode.strip():
@@ -367,7 +381,7 @@ if not st.session_state["logged_in"]:
                     if not df_users.empty and "Username" in df_users.columns:
                         exists = df_users[df_users["Username"].str.upper() == reg_pj.strip().upper()]
                         if not exists.empty:
-                            st.error(f"❌ Nama '{reg_pj}' berhasil terdaftar! Anda dapat Login.")
+                            st.error(f"❌ Username '{reg_pj}' sudah terdaftar! Silakan langsung gunakan tab Login Masuk.")
                             st.stop()
                     
                     new_user = pd.DataFrame([{
@@ -378,9 +392,9 @@ if not st.session_state["logged_in"]:
                     updated_users = pd.concat([df_users, new_user], ignore_index=True)
                     try:
                         safe_gsheets_update("Users", updated_users)
-                        st.success("Anda dapat Login")
+                        st.success("✅ Pendaftaran berhasil tersimpan! Silakan pindah ke tab 'Login Masuk' untuk beroperasi.")
                     except Exception as e:
-                        st.error(f"⚠️ Gagal membuat akun: {e}")
+                        st.error(f"⚠️ Gagal menyimpan akun ke Google Sheet: {e}")
 
         st.stop()
 
@@ -395,7 +409,7 @@ st.markdown(f"""<div class="intro-banner-eucalyptus">
 <div>
 <div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
 <h1>Monitoring Silvikultur Eucalyptus</h1>
-<p>Penanggung Jawab: <b>{st.session_state['user_pj']}</b> &nbsp;|&nbsp; Akses: <b>{role_badge}</b></p>
+<p>Username: <b>{st.session_state['user_pj']}</b> &nbsp;|&nbsp; Akses: <b>{role_badge}</b></p>
 </div>
 {EUCALYPTUS_SVG}
 </div>""", unsafe_allow_html=True)
@@ -447,7 +461,7 @@ with st.expander("📝 Form Input / Tambah Data Kerja Lapangan", expanded=False)
             
         with col_f2:
             spk_input = st.text_input("Nomor SPK (Opsional)", placeholder="Contoh: SPK/EUC/2026/001")
-            pj = st.text_input("Penanggung Jawab *", value=st.session_state["user_pj"], disabled=True)
+            pj = st.text_input("Username *", value=st.session_state["user_pj"], disabled=True)
             
         jenis_kegiatan = st.selectbox("Jenis Kegiatan Silvikultur", [
             "Established - PLTB", "Established - Kuku Macan", "Established - Parit",
@@ -513,7 +527,7 @@ with st.expander("📝 Form Input / Tambah Data Kerja Lapangan", expanded=False)
                     "SPK": spk_val,
                     "Jenis Kegiatan": jenis_kegiatan,
                     "Luas": luas,
-                    "Penanggung Jawab": pj_final,
+                    "Username": pj_final,
                     "Tanggal Rencana Kerja": tgl_rencana.strftime("%Y-%m-%d"),
                     "Tanggal Mulai Bekerja": tgl_mulai.strftime("%Y-%m-%d"),
                     "Tanggal Selesai Kerja": tgl_selesai.strftime("%Y-%m-%d"),
@@ -538,7 +552,7 @@ with st.expander("📋 Lengkapi Nomor SPK yang Belum Terisi", expanded=False):
     else:
         spk_series = df["SPK"].astype(str).str.strip()
         empty_spk_mask = df["SPK"].isna() | (spk_series == "") | (spk_series == "-") | (spk_series == "None") | (spk_series == "nan")
-        user_mask = df["Penanggung Jawab"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
+        user_mask = df["Username"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
         
         unfilled_df = df[user_mask & empty_spk_mask]
         
@@ -570,7 +584,7 @@ with st.expander("📋 Lengkapi Nomor SPK yang Belum Terisi", expanded=False):
 if is_admin:
     with st.expander("🛠️ Panel Administrator (Pengelolaan Data)", expanded=False):
         if not df.empty:
-            options_list = [f"Baris {idx + 1} | ID: {row['ID Petak']} | SPK: {row.get('SPK', '-')} | PJ: {row['Penanggung Jawab']}" for idx, row in df.iterrows()]
+            options_list = [f"Baris {idx + 1} | ID: {row['ID Petak']} | SPK: {row.get('SPK', '-')} | User: {row['Username']}" for idx, row in df.iterrows()]
             selected_option = st.selectbox("Pilih Data yang Akan Dihapus:", options_list)
             selected_idx = options_list.index(selected_option)
             
@@ -588,15 +602,15 @@ view_option = st.radio("Tampilkan Filter Data:", ["Khusus Data Saya", "Semua Dat
 filtered_df = df.copy()
 if view_option == "Khusus Data Saya" and not filtered_df.empty:
     filtered_df = filtered_df[
-        filtered_df["Penanggung Jawab"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
+        filtered_df["Username"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
     ]
 
-search_term = st.text_input("🔍 Cari Data (ID Petak / SPK / Kegiatan / PJ):", placeholder="Ketik kata kunci pencarian...")
+search_term = st.text_input("🔍 Cari Data (ID Petak / SPK / Kegiatan / Username):", placeholder="Ketik kata kunci pencarian...")
 if search_term and not filtered_df.empty:
     filtered_df = filtered_df[
         filtered_df["ID Petak"].astype(str).str.contains(search_term, case=False, na=False) |
         filtered_df["SPK"].astype(str).str.contains(search_term, case=False, na=False) |
-        filtered_df["Penanggung Jawab"].astype(str).str.contains(search_term, case=False, na=False) |
+        filtered_df["Username"].astype(str).str.contains(search_term, case=False, na=False) |
         filtered_df["Jenis Kegiatan"].astype(str).str.contains(search_term, case=False, na=False) |
         filtered_df["Rincian"].astype(str).str.contains(search_term, case=False, na=False)
     ]
