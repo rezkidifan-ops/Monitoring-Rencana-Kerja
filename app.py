@@ -11,9 +11,23 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. CUSTOM CSS - OPTIMALISASI MOBILE & TEMA HIJAU EUCALYPTUS, MERAH, PUTIH
+# 2. CUSTOM CSS - MOBILE RESPONSIVE, TEMA EUCALYPTUS, & SEMBUNYIKAN HEADER
 st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
+/* ========================================================= */
+/* 🚫 SEMBUNYIKAN HEADER STREAMLIT (SHARE, MENU, EDIT, FOOTER)*/
+/* ========================================================= */
+header[data-testid="stHeader"],
+div[data-testid="stToolbar"],
+#MainMenu,
+footer,
+.stAppHeader,
+[data-testid="stHeaderActionElements"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0px !important;
+}
 
 /* Base Font & Background */
 html, body, [class*="css"] {
@@ -188,7 +202,7 @@ div[data-testid="stDataFrame"] {
 /* ========================================================= */
 @media (max-width: 768px) {
     .main .block-container {
-        padding-top: 0.5rem !important;
+        padding-top: 0.2rem !important;
         padding-bottom: 1.5rem !important;
         padding-left: 0.4rem !important;
         padding-right: 0.4rem !important;
