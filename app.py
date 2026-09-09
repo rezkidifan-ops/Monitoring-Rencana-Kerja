@@ -3,6 +3,11 @@ from datetime import datetime
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
+# =========================================================
+# 🔗 KONFIGURASI URL GOOGLE SHEET ANDA
+# =========================================================
+SPREADSHEET_URL = "MASUKKAN_URL_GOOGLE_SHEET_ANDA_DI_SINI"
+
 # 1. PENGATURAN HALAMAN
 st.set_page_config(
     page_title="HTI Eucalyptus - We Care We Do We Win", 
@@ -259,7 +264,7 @@ USER_COLUMNS = ["Penanggung Jawab", "Kode Unik", "Role"]
 
 def load_data():
     try:
-        df = conn.read(worksheet="Sheet1", ttl=0)
+        df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", ttl=0)
         if df is None or df.empty:
             return pd.DataFrame(columns=COLUMNS)
         for col in COLUMNS:
@@ -272,7 +277,7 @@ def load_data():
 
 def load_users():
     try:
-        df_users = conn.read(worksheet="Users", ttl=0)
+        df_users = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="Users", ttl=0)
         if df_users is None or df_users.empty:
             return pd.DataFrame(columns=USER_COLUMNS)
         for col in USER_COLUMNS:
@@ -374,7 +379,7 @@ if not st.session_state["logged_in"]:
                     }])
                     updated_users = pd.concat([df_users, new_user], ignore_index=True)
                     try:
-                        conn.update(worksheet="Users", data=updated_users)
+                        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Users", data=updated_users)
                         st.success("✅ Pendaftaran berhasil! Silakan pindah ke tab 'Login Masuk'.")
                     except Exception as e:
                         st.error(f"⚠️ Gagal menyimpan akun: {e}")
@@ -509,7 +514,7 @@ with st.expander("📝 Form Input / Tambah Data Kerja Lapangan", expanded=False)
                 }])
                 
                 updated_df = pd.concat([df, new_row], ignore_index=True)
-                conn.update(worksheet="Sheet1", data=updated_df)
+                conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=updated_df)
                 
                 if spk_val == "-":
                     st.warning(f"⚠️ Data Petak '{id_petak}' berhasil disimpan, **namun Nomor SPK belum terisi!** Silakan lengkapi pada menu 'Lengkapi Nomor SPK'.")
@@ -551,7 +556,7 @@ with st.expander("📋 Lengkapi Nomor SPK yang Belum Terisi", expanded=False):
                         st.error("❌ Nomor SPK tidak boleh kosong!")
                     else:
                         df.at[target_idx, "SPK"] = input_spk_baru.strip()
-                        conn.update(worksheet="Sheet1", data=df)
+                        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=df)
                         st.success(f"✅ Nomor SPK untuk Petak '{df.at[target_idx, 'ID Petak']}' berhasil diperbarui!")
                         st.rerun()
 
@@ -575,7 +580,7 @@ if is_admin:
                 if st.button("🗑️ HAPUS BARIS INI", use_container_width=True):
                     df_dropped = df.drop(selected_idx).reset_index(drop=True)
                     df_dropped["No"] = range(1, len(df_dropped) + 1)
-                    conn.update(worksheet="Sheet1", data=df_dropped)
+                    conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=df_dropped)
                     st.success("✅ Data berhasil dihapus dari Google Sheets!")
                     st.rerun()
             
@@ -602,7 +607,7 @@ if is_admin:
                     df.at[selected_idx, "Produktivitas Sampai Hari ini"] = prod_hari_ini
                     df.at[selected_idx, "Sisa luas belum dikerjakan"] = sisa_luas
                     
-                    conn.update(worksheet="Sheet1", data=df)
+                    conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=df)
                     st.success("✅ Perubahan berhasil disimpan oleh Administrator!")
                     st.rerun()
 
