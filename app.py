@@ -41,8 +41,13 @@ st.sidebar.header("➕ Input Rencana & Realisasi Kerja")
 with st.sidebar.form("form_monitoring", clear_on_submit=True):
     id_petak = st.text_input("ID Petak *")
     jenis_kegiatan = st.selectbox("Jenis Kegiatan", [
-        "Persiapan Lahan", "Penanaman", "Pemeliharaan", 
-        "Pemupukan", "Pemanenan", "Lainnya"
+        "Established", [ "PLTB", "Kuku Macan", 
+                        "Parit", "Teras", "Lining+Sticking", "Tanam", "Tanam & Aquasorb",
+                        "Sulam", "PPS", "PPS Dron" ] [
+        "Maintenance", [ "MW 1", "CW 1", "CW 2", "CW 3", "CW 4", "CW 5",
+                        "CW 6", "CW 7", "MW 2", "MW 3", "PS1", "PS1 drone",
+                        "HPT", "HPT Drone", "PS2 Drone", "PS 2"
+                        
     ])
     luas = st.number_input("Luas (Ha)", min_value=0.0, step=0.1)
     pj = st.text_input("Penanggung Jawab *")
