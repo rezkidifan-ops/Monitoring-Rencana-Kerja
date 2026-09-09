@@ -384,15 +384,15 @@ if not st.session_state["logged_in"]:
                     
                     new_user = pd.DataFrame([{
                         "Penanggung Jawab": reg_pj.strip(), 
-                        "Kode Unik": reg_kode.strip(),
+                        "Kode Unik": str(reg_kode.strip()),
                         "Role": "User"
                     }])
                     updated_users = pd.concat([df_users, new_user], ignore_index=True)
                     try:
                         safe_gsheets_update("Users", updated_users)
-                        st.success("✅ Pendaftaran berhasil! Silakan pindah ke tab 'Login Masuk'.")
+                        st.success("✅ Pendaftaran berhasil dan tersimpan ke Sheet! Silakan pindah ke tab 'Login Masuk'.")
                     except Exception as e:
-                        st.error(f"⚠️ Gagal menyimpan akun: {e}")
+                        st.error(f"⚠️ Gagal menyimpan akun ke Google Sheet: {e}")
 
         st.stop()
 
