@@ -4,9 +4,9 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
 # =========================================================
-# 🔗 MASUKKAN URL GOOGLE SHEET ANDA DI ANTARA TANDA KUTIP DI BAWAH INI
+# 🔗 URL GOOGLE SHEET ANDA
 # =========================================================
-SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/...MASUKKAN_LINK_ANDA_DISINI.../edit"
+SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1qJMHdTkURQV7LQE_DfO3UiX_txepHVCXqRct3mrQlxs/edit?usp=drivesdk"
 
 # 1. PENGATURAN HALAMAN
 st.set_page_config(
@@ -84,7 +84,6 @@ USER_COLUMNS = ["Penanggung Jawab", "Kode Unik", "Role"]
 
 def load_users():
     try:
-        # Membaca tab 'Users' dari Google Sheet
         df_users = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="Users", ttl=0)
         if df_users is None or df_users.empty:
             return pd.DataFrame(columns=USER_COLUMNS)
@@ -170,7 +169,6 @@ if not st.session_state["logged_in"]:
                 else:
                     df_users = load_users()
                     
-                    # Buat baris data baru
                     new_user = pd.DataFrame([{
                         "Penanggung Jawab": reg_pj.strip(), 
                         "Kode Unik": str(reg_kode.strip()),
@@ -180,7 +178,6 @@ if not st.session_state["logged_in"]:
                     updated_users = pd.concat([df_users, new_user], ignore_index=True)
                     
                     try:
-                        # Menyimpan langsung ke tab 'Users' dan memunculkan error jika gagal
                         conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Users", data=updated_users)
                         st.success(f"✅ Pendaftaran '{reg_pj}' berhasil dan tersimpan ke Sheet! Silakan pindah ke tab 'Login Masuk'.")
                     except Exception as e:
