@@ -11,192 +11,224 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# 2. CUSTOM CSS - TEMA HIJAU EUCALYPTUS, MERAH & PUTIH
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
-    
-    /* Base Font & App Background */
-    html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
-    }
-    
-    .stApp {
-        background: linear-gradient(180deg, #F4F7F4 0%, #E9EFE9 100%);
-    }
-    
-    /* Layout Container Spacing */
+# 2. CUSTOM CSS - OPTIMALISASI MOBILE & TEMA HIJAU EUCALYPTUS, MERAH, PUTIH
+st.markdown("""<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
+/* Base Font & Background */
+html, body, [class*="css"] {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
+.stApp {
+    background: linear-gradient(180deg, #F4F7F4 0%, #E9EFE9 100%);
+}
+
+/* Layout Container Default Desktop */
+.main .block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 2rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    max-width: 1200px;
+}
+
+/* BANNER INTRO: HIJAU EUCALYPTUS, MERAH & PUTIH */
+.intro-banner-eucalyptus {
+    background: linear-gradient(135deg, #1B3B22 0%, #2E5A36 60%, #990000 100%);
+    color: #FFFFFF;
+    padding: 1.5rem 1.8rem;
+    border-radius: 18px;
+    box-shadow: 0 10px 25px rgba(46, 90, 54, 0.25);
+    margin-bottom: 1.2rem;
+    border-bottom: 4px solid #C8102E;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+/* BADGE MERAH - WE CARE WE DO WE WIN */
+.motto-badge-red {
+    display: inline-block;
+    background: #C8102E;
+    color: #FFFFFF !important;
+    font-weight: 900 !important;
+    font-size: 0.8rem !important;
+    padding: 0.3rem 0.8rem;
+    border-radius: 30px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 4px 10px rgba(200, 16, 46, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.intro-banner-eucalyptus h1 {
+    color: #FFFFFF !important;
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+    margin: 0 !important;
+    letter-spacing: -0.5px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.intro-banner-eucalyptus p {
+    color: #F8F9FA !important;
+    margin: 0.3rem 0 0 0 !important;
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0.95;
+}
+
+/* Vektor Pohon Eucalyptus Styling */
+.eucalyptus-tree-svg {
+    width: 90px;
+    height: 90px;
+    flex-shrink: 0;
+    filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.25));
+    opacity: 0.95;
+}
+
+/* Metric Cards Styling */
+div[data-testid="stMetric"] {
+    background: #FFFFFF !important;
+    padding: 0.9rem 1rem !important;
+    border-radius: 14px !important;
+    border-left: 5px solid #2E5A36 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+    transition: all 0.25s ease !important;
+}
+div[data-testid="stMetric"]:hover {
+    transform: translateY(-2px);
+    border-left: 5px solid #C8102E !important;
+    box-shadow: 0 6px 16px rgba(200, 16, 46, 0.15) !important;
+}
+div[data-testid="stMetricLabel"] > div {
+    color: #334155 !important;
+    font-weight: 700 !important;
+    font-size: 0.8rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+div[data-testid="stMetricValue"] > div {
+    color: #1E293B !important;
+    font-weight: 800 !important;
+    font-size: 1.4rem !important;
+}
+
+/* Primary Buttons Styling */
+div.stButton > button {
+    background: linear-gradient(135deg, #2E5A36 0%, #1B3B22 100%) !important;
+    color: #FFFFFF !important;
+    border: none !important;
+    border-left: 4px solid #C8102E !important;
+    border-radius: 12px !important;
+    height: 3.2rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 14px rgba(46, 90, 54, 0.25) !important;
+    transition: all 0.25s ease !important;
+}
+div.stButton > button:hover {
+    background: linear-gradient(135deg, #C8102E 0%, #990000 100%) !important;
+    border-left: 4px solid #FFFFFF !important;
+    box-shadow: 0 6px 18px rgba(200, 16, 46, 0.35) !important;
+}
+
+/* Expander Styling */
+.streamlit-expanderHeader {
+    background-color: #FFFFFF !important;
+    color: #1E293B !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    border-radius: 12px !important;
+    border: 1px solid #D1D5DB !important;
+    padding: 0.7rem 0.9rem !important;
+}
+
+/* Form Inputs */
+div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {
+    border-radius: 10px !important;
+    border-color: #CBD5E1 !important;
+    background-color: #FFFFFF !important;
+}
+
+/* Tabs Styling */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 6px;
+    background-color: #E2E8F0;
+    padding: 5px;
+    border-radius: 12px;
+}
+.stTabs [data-baseweb="tab"] {
+    height: 2.6rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #475569;
+}
+.stTabs [aria-selected="true"] {
+    background-color: #FFFFFF !important;
+    color: #2E5A36 !important;
+    border-bottom: 3px solid #C8102E;
+}
+
+/* Table Styling */
+div[data-testid="stDataFrame"] {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 0.4rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    border: 1px solid #E2E8F0;
+}
+
+/* ========================================================= */
+/* 📱 OPTIMALISASI KHUSUS LAYAR HP (MOBILE RESPONSIVE)       */
+/* ========================================================= */
+@media (max-width: 768px) {
     .main .block-container {
-        padding-top: 1.2rem !important;
-        padding-bottom: 2.5rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
-        max-width: 1200px;
+        padding-top: 0.5rem !important;
+        padding-bottom: 1.5rem !important;
+        padding-left: 0.4rem !important;
+        padding-right: 0.4rem !important;
     }
-    
-    /* BANNER INTRO: COMBINATION HIJAU EUCALYPTUS, MERAH & PUTIH */
     .intro-banner-eucalyptus {
-        background: linear-gradient(135deg, #1B3B22 0%, #2E5A36 60%, #990000 100%);
-        color: #FFFFFF;
-        padding: 1.8rem 2rem;
-        border-radius: 20px;
-        box-shadow: 0 12px 28px rgba(46, 90, 54, 0.25);
-        margin-bottom: 1.5rem;
-        border-bottom: 4px solid #C8102E;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column-reverse;
+        align-items: flex-start;
+        padding: 1.1rem 1.1rem !important;
+        gap: 10px;
+        border-radius: 14px;
     }
-    
-    /* BADGE MERAH - WE CARE WE DO WE WIN */
-    .motto-badge-red {
-        display: inline-block;
-        background: #C8102E;
-        color: #FFFFFF !important;
-        font-weight: 900 !important;
-        font-size: 0.85rem !important;
-        padding: 0.35rem 0.9rem;
-        border-radius: 30px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 0.6rem;
-        box-shadow: 0 4px 10px rgba(200, 16, 46, 0.4);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    
     .intro-banner-eucalyptus h1 {
-        color: #FFFFFF !important;
-        font-size: 1.8rem !important;
-        font-weight: 800 !important;
-        margin: 0 !important;
-        letter-spacing: -0.5px;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        font-size: 1.3rem !important;
     }
-    
     .intro-banner-eucalyptus p {
-        color: #F8F9FA !important;
-        margin: 0.3rem 0 0 0 !important;
-        font-size: 0.95rem;
-        font-weight: 500;
-        opacity: 0.95;
+        font-size: 0.82rem !important;
     }
-
-    /* Vektor Pohon Eucalyptus Styling */
+    .motto-badge-red {
+        font-size: 0.68rem !important;
+        padding: 0.25rem 0.6rem !important;
+        letter-spacing: 1px;
+    }
     .eucalyptus-tree-svg {
-        width: 110px;
-        height: 110px;
-        flex-shrink: 0;
-        filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.25));
-        opacity: 0.95;
+        width: 55px !important;
+        height: 55px !important;
+        align-self: flex-end;
+        margin-bottom: -10px;
     }
-
-    /* Metric Cards Styling */
     div[data-testid="stMetric"] {
-        background: #FFFFFF !important;
-        padding: 1.1rem 1.2rem !important;
-        border-radius: 16px !important;
-        border-left: 6px solid #2E5A36 !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-        transition: all 0.25s ease !important;
-    }
-    div[data-testid="stMetric"]:hover {
-        transform: translateY(-3px);
-        border-left: 6px solid #C8102E !important;
-        box-shadow: 0 8px 20px rgba(200, 16, 46, 0.15) !important;
-    }
-    div[data-testid="stMetricLabel"] > div {
-        color: #334155 !important;
-        font-weight: 700 !important;
-        font-size: 0.85rem !important;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        padding: 0.7rem 0.8rem !important;
+        margin-bottom: 0.4rem;
     }
     div[data-testid="stMetricValue"] > div {
-        color: #1E293B !important;
-        font-weight: 800 !important;
-        font-size: 1.55rem !important;
+        font-size: 1.25rem !important;
     }
-
-    /* Primary Buttons Styling (Hijau Eucalyptus + Akses Merah) */
-    div.stButton > button {
-        background: linear-gradient(135deg, #2E5A36 0%, #1B3B22 100%) !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        border-left: 4px solid #C8102E !important;
-        border-radius: 12px !important;
-        height: 3.2rem !important;
-        font-size: 1rem !important;
-        font-weight: 700 !important;
-        letter-spacing: 0.3px;
-        box-shadow: 0 6px 16px rgba(46, 90, 54, 0.25) !important;
-        transition: all 0.25s ease !important;
+    div[data-testid="stMetricLabel"] > div {
+        font-size: 0.72rem !important;
     }
-    div.stButton > button:hover {
-        background: linear-gradient(135deg, #C8102E 0%, #990000 100%) !important;
-        border-left: 4px solid #FFFFFF !important;
-        box-shadow: 0 8px 22px rgba(200, 16, 46, 0.35) !important;
-        transform: translateY(-2px) !important;
-    }
-
-    /* Expander Styling */
-    .streamlit-expanderHeader {
-        background-color: #FFFFFF !important;
-        color: #1E293B !important;
-        font-weight: 700 !important;
-        font-size: 1.02rem !important;
-        border-radius: 14px !important;
-        border: 1px solid #D1D5DB !important;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03) !important;
-        padding: 0.8rem 1rem !important;
-    }
-    .streamlit-expanderHeader:hover {
-        border-color: #2E5A36 !important;
-        color: #2E5A36 !important;
-    }
-
-    /* Form Inputs */
-    div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {
-        border-radius: 10px !important;
-        border-color: #CBD5E1 !important;
-        background-color: #FFFFFF !important;
-    }
-    div[data-baseweb="input"]:focus-within > div {
-        border-color: #2E5A36 !important;
-        box-shadow: 0 0 0 3px rgba(46, 90, 54, 0.15) !important;
-    }
-
-    /* Tabs Styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #E2E8F0;
-        padding: 6px;
-        border-radius: 14px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 2.8rem;
-        border-radius: 10px;
-        font-weight: 700;
-        color: #475569;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #FFFFFF !important;
-        color: #2E5A36 !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border-bottom: 3px solid #C8102E;
-    }
-
-    /* Table Styling */
-    div[data-testid="stDataFrame"] {
-        background: #FFFFFF;
-        border-radius: 14px;
-        padding: 0.5rem;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-        border: 1px solid #E2E8F0;
-    }
-    </style>
-""", unsafe_allow_html=True)
+}
+</style>""", unsafe_allow_html=True)
 
 # 3. KONEKSI GOOGLE SHEETS
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -244,39 +276,33 @@ if "user_pj" not in st.session_state:
 if "user_role" not in st.session_state:
     st.session_state["user_role"] = "User"
 
-# SVG Pohon Eucalyptus (Putih Vektor Clean)
-EUCALYPTUS_SVG = """
-<svg class="eucalyptus-tree-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <!-- Batang Utama & Dahan -->
-    <path d="M48 92 C 48 60, 52 40, 50 10 C 50 10, 47 35, 45 92 Z" fill="#FFFFFF" opacity="0.95"/>
-    <path d="M50 55 C 60 45, 75 42, 82 38 C 72 46, 58 52, 50 58 Z" fill="#FFFFFF" opacity="0.9"/>
-    <path d="M49 42 C 38 32, 22 30, 15 25 C 25 32, 40 38, 48 45 Z" fill="#FFFFFF" opacity="0.9"/>
-    <path d="M50 28 C 62 20, 72 16, 78 12 C 68 18, 56 22, 50 30 Z" fill="#FFFFFF" opacity="0.9"/>
-    <!-- Daun Eucalyptus khas berbentuk oval memanjang -->
-    <ellipse cx="82" cy="38" rx="8" ry="4" transform="rotate(-20 82 38)" fill="#FFFFFF"/>
-    <ellipse cx="70" cy="42" rx="7" ry="3.5" transform="rotate(-15 70 42)" fill="#FFFFFF" opacity="0.9"/>
-    <ellipse cx="15" cy="25" rx="8" ry="4" transform="rotate(20 15 25)" fill="#FFFFFF"/>
-    <ellipse cx="28" cy="32" rx="7" ry="3.5" transform="rotate(15 28 32)" fill="#FFFFFF" opacity="0.9"/>
-    <ellipse cx="78" cy="12" rx="7" ry="3.5" transform="rotate(-25 78 12)" fill="#FFFFFF"/>
-    <ellipse cx="64" cy="18" rx="6" ry="3" transform="rotate(-20 64 18)" fill="#FFFFFF" opacity="0.9"/>
-    <ellipse cx="50" cy="8" rx="7" ry="3.5" transform="rotate(-90 50 8)" fill="#FFFFFF"/>
-</svg>
-"""
+# SVG Pohon Eucalyptus (String Rata Kiri Tanpa Indentasi)
+EUCALYPTUS_SVG = """<svg class="eucalyptus-tree-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M48 92 C 48 60, 52 40, 50 10 C 50 10, 47 35, 45 92 Z" fill="#FFFFFF" opacity="0.95"/>
+<path d="M50 55 C 60 45, 75 42, 82 38 C 72 46, 58 52, 50 58 Z" fill="#FFFFFF" opacity="0.9"/>
+<path d="M49 42 C 38 32, 22 30, 15 25 C 25 32, 40 38, 48 45 Z" fill="#FFFFFF" opacity="0.9"/>
+<path d="M50 28 C 62 20, 72 16, 78 12 C 68 18, 56 22, 50 30 Z" fill="#FFFFFF" opacity="0.9"/>
+<ellipse cx="82" cy="38" rx="8" ry="4" transform="rotate(-20 82 38)" fill="#FFFFFF"/>
+<ellipse cx="70" cy="42" rx="7" ry="3.5" transform="rotate(-15 70 42)" fill="#FFFFFF" opacity="0.9"/>
+<ellipse cx="15" cy="25" rx="8" ry="4" transform="rotate(20 15 25)" fill="#FFFFFF"/>
+<ellipse cx="28" cy="32" rx="7" ry="3.5" transform="rotate(15 28 32)" fill="#FFFFFF" opacity="0.9"/>
+<ellipse cx="78" cy="12" rx="7" ry="3.5" transform="rotate(-25 78 12)" fill="#FFFFFF"/>
+<ellipse cx="64" cy="18" rx="6" ry="3" transform="rotate(-20 64 18)" fill="#FFFFFF" opacity="0.9"/>
+<ellipse cx="50" cy="8" rx="7" ry="3.5" transform="rotate(-90 50 8)" fill="#FFFFFF"/>
+</svg>"""
 
 # ----------------- TAMPILAN LOGIN / REGISTRASI -----------------
 if not st.session_state["logged_in"]:
-    st.markdown(f"""
-        <div class="intro-banner-eucalyptus">
-            <div>
-                <div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
-                <h1>HTI Eucalyptus System</h1>
-                <p>Sistem Monitoring & Rencana Kerja Operasional Lapangan</p>
-            </div>
-            {EUCALYPTUS_SVG}
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown(f"""<div class="intro-banner-eucalyptus">
+<div>
+<div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
+<h1>HTI Eucalyptus System</h1>
+<p>Sistem Monitoring & Rencana Kerja Operasional Lapangan</p>
+</div>
+{EUCALYPTUS_SVG}
+</div>""", unsafe_allow_html=True)
     
-    tab_login, tab_register = st.tabs(["🔑 Login Masuk", "📝 Pendaftaran Penanggung Jawab"])
+    tab_login, tab_register = st.tabs(["🔑 Login Masuk", "📝 Pendaftaran User"])
     
     # TAB LOGIN
     with tab_login:
@@ -284,7 +310,7 @@ if not st.session_state["logged_in"]:
         with st.form("form_login"):
             pj_input = st.text_input("Nama Penanggung Jawab")
             kode_input = st.text_input("Kode Unik / PIN Akun", type="password")
-            btn_login = st.form_submit_button("🔑 MASUK KE SISTEM")
+            btn_login = st.form_submit_button("🔑 MASUK KE SISTEM", use_container_width=True)
             
             if btn_login:
                 if not pj_input.strip() or not kode_input.strip():
@@ -314,7 +340,7 @@ if not st.session_state["logged_in"]:
         with st.form("form_register"):
             reg_pj = st.text_input("Nama Penanggung Jawab *", placeholder="Contoh: Budi Santoso")
             reg_kode = st.text_input("Buat Kode Unik / PIN *", type="password", placeholder="Minimal 4 karakter")
-            btn_reg = st.form_submit_button("📝 DAFTAR AKUN BARU")
+            btn_reg = st.form_submit_button("📝 DAFTAR AKUN BARU", use_container_width=True)
             
             if btn_reg:
                 if not reg_pj.strip() or not reg_kode.strip():
@@ -345,21 +371,19 @@ if not st.session_state["logged_in"]:
 df = load_data()
 is_admin = str(st.session_state.get("user_role", "User")).strip().lower() == "admin"
 
-# Header Intro
+# Header Intro Main Dashboard
 role_badge = "👑 Administrator" if is_admin else "👤 Field Officer"
-st.markdown(f"""
-    <div class="intro-banner-eucalyptus">
-        <div>
-            <div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
-            <h1>Monitoring Silvikultur Eucalyptus</h1>
-            <p>Penanggung Jawab: <b>{st.session_state['user_pj']}</b> &nbsp;|&nbsp; Akses: <b>{role_badge}</b></p>
-        </div>
-        {EUCALYPTUS_SVG}
-    </div>
-""", unsafe_allow_html=True)
+st.markdown(f"""<div class="intro-banner-eucalyptus">
+<div>
+<div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
+<h1>Monitoring Silvikultur Eucalyptus</h1>
+<p>Penanggung Jawab: <b>{st.session_state['user_pj']}</b> &nbsp;|&nbsp; Akses: <b>{role_badge}</b></p>
+</div>
+{EUCALYPTUS_SVG}
+</div>""", unsafe_allow_html=True)
 
 # Logout Button
-col_space, col_logout = st.columns([4, 1])
+col_space, col_logout = st.columns([3, 1.5])
 with col_logout:
     if st.button("🚪 Keluar Akun", use_container_width=True):
         st.session_state["logged_in"] = False
@@ -374,7 +398,7 @@ total_a_tk = pd.to_numeric(df["Actual Tenaga Kerja"], errors="coerce").fillna(0)
 
 m1, m2, m3, m4 = st.columns(4)
 m1.metric("Total Petak", f"{len(df)} Unit")
-m2.metric("Total Luas Area", f"{total_luas:,.1f} Ha")
+m2.metric("Total Luas", f"{total_luas:,.1f} Ha")
 m3.metric("Rencana TK", f"{int(total_r_tk)} Orang")
 m4.metric("Actual TK", f"{int(total_a_tk)} Orang")
 
@@ -492,13 +516,13 @@ with st.expander("📋 Lengkapi Nomor SPK yang Belum Terisi", expanded=False):
         unfilled_df = df[user_mask & empty_spk_mask]
         
         if unfilled_df.empty:
-            st.success("🎉 Luar biasa! Semua kegiatan milik Anda sudah memiliki Nomor SPK yang lengkap.")
+            st.success("🎉 Semua kegiatan Anda sudah memiliki Nomor SPK yang lengkap!")
         else:
             st.warning(f"📌 Terdapat **{len(unfilled_df)} kegiatan** milik Anda yang Nomor SPK-nya masih kosong.")
             
             options_spk = {}
             for idx, row in unfilled_df.iterrows():
-                label = f"ID Petak: {row['ID Petak']} | Kegiatan: {row['Jenis Kegiatan']} | Luas: {row['Luas']} Ha"
+                label = f"ID: {row['ID Petak']} | Kegiatan: {row['Jenis Kegiatan']} | Luas: {row['Luas']} Ha"
                 options_spk[label] = idx
             
             selected_label = st.selectbox("Pilih Kegiatan Tanpa SPK:", list(options_spk.keys()))
@@ -514,7 +538,7 @@ with st.expander("📋 Lengkapi Nomor SPK yang Belum Terisi", expanded=False):
                     else:
                         df.at[target_idx, "SPK"] = input_spk_baru.strip()
                         conn.update(worksheet="Sheet1", data=df)
-                        st.success(f"✅ Nomor SPK untuk Petak '{df.at[target_idx, 'ID Petak']}' berhasil diperbarui menjadi '{input_spk_baru.strip()}'!")
+                        st.success(f"✅ Nomor SPK untuk Petak '{df.at[target_idx, 'ID Petak']}' berhasil diperbarui!")
                         st.rerun()
 
 # 3. PANEL ADMINISTRATOR (EDIT & HAPUS)
@@ -525,7 +549,7 @@ if is_admin:
         else:
             st.subheader("Edit atau Hapus Baris Data Lapangan")
             
-            options_list = [f"Baris {idx + 1} | ID: {row['ID Petak']} | SPK: {row.get('SPK', '-')} | PJ: {row['Penanggung Jawab']} | Kegiatan: {row['Jenis Kegiatan']}" for idx, row in df.iterrows()]
+            options_list = [f"Baris {idx + 1} | ID: {row['ID Petak']} | SPK: {row.get('SPK', '-')} | PJ: {row['Penanggung Jawab']}" for idx, row in df.iterrows()]
             selected_option = st.selectbox("Pilih Data yang Ingin Di-Edit / Dihapus:", options_list)
             
             selected_idx = options_list.index(selected_option)
@@ -551,7 +575,7 @@ if is_admin:
                 edit_luas = st.number_input("Luas Area (Ha)", value=float(selected_row["Luas"]) if pd.notna(selected_row["Luas"]) else 0.0)
                 edit_act_prod = st.number_input("Actual Produktivitas (Ha)", value=float(selected_row["Actual Produktivitas"]) if pd.notna(selected_row["Actual Produktivitas"]) else 0.0)
                 
-                btn_update = st.form_submit_button("✏️ SIMPAN PERUBAHAN ADMIN")
+                btn_update = st.form_submit_button("✏️ SIMPAN PERUBAHAN ADMIN", use_container_width=True)
                 if btn_update:
                     df.at[selected_idx, "ID Petak"] = edit_id.strip()
                     df.at[selected_idx, "SPK"] = edit_spk.strip() if edit_spk.strip() else "-"
@@ -590,7 +614,7 @@ if not df.empty:
             empty_spk_mask
         ]
         if not user_empty_spk.empty:
-            st.error(f"🔔 **PENGINGAT SPK KOSONG**: Terdapat **{len(user_empty_spk)} data** milik Anda yang **Nomor SPK-nya belum terisi!** Silakan lengkapi pada menu **'📋 Lengkapi Nomor SPK'** di atas.")
+            st.error(f"🔔 **PENGINGAT SPK KOSONG**: Terdapat **{len(user_empty_spk)} data** milik Anda yang **Nomor SPK-nya belum terisi!** Silakan lengkapi di menu **'📋 Lengkapi Nomor SPK'**.")
 
 view_option = st.radio("Tampilkan Filter Data:", ["Khusus Data Saya", "Semua Data Tim Lapangan"], horizontal=True)
 
@@ -601,7 +625,7 @@ if view_option == "Khusus Data Saya" and not filtered_df.empty:
         filtered_df["Penanggung Jawab"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
     ]
 
-search_term = st.text_input("🔍 Cari Data (ID Petak / SPK / Kegiatan / PJ / Status):", placeholder="Ketik kata kunci pencarian...")
+search_term = st.text_input("🔍 Cari Data (ID Petak / SPK / Kegiatan / PJ):", placeholder="Ketik kata kunci...")
 
 if search_term and not filtered_df.empty:
     filtered_df = filtered_df[
@@ -612,5 +636,5 @@ if search_term and not filtered_df.empty:
         filtered_df["Rincian"].astype(str).str.contains(search_term, case=False, na=False)
     ]
 
-st.caption("💡 *Petunjuk: Geser tabel ke kanan/kiri untuk melihat seluruh rincian kolom.*")
+st.caption("💡 *Petunjuk Mobile: Geser tabel ke kanan/kiri untuk melihat rincian kolom.*")
 st.dataframe(filtered_df, use_container_width=True, hide_index=True)
