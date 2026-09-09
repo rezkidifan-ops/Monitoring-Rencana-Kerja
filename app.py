@@ -7,7 +7,7 @@ from streamlit_gsheets import GSheetsConnection
 # 🔗 KONFIGURASI URL GOOGLE SHEET
 # Silakan ganti string di bawah ini dengan URL Google Sheet Anda
 # =========================================================
-SPREADSHEET_URL = "MASUKKAN_URL_GOOGLE_SHEET_ANDA_DI_SINI"
+SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1qJMHdTkURQV7LQE_DfO3UiX_txepHVCXqRct3mrQlxs/edit?usp=drivesdk"
 
 # 1. PENGATURAN HALAMAN
 st.set_page_config(
