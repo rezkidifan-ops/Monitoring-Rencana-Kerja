@@ -20,9 +20,6 @@ st.set_page_config(
 st.markdown("""<style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 
-/* ========================================================= */
-/* 🚫 SEMBUNYIKAN HEADER STREAMLIT (SHARE, MENU, EDIT, FOOTER)*/
-/* ========================================================= */
 header[data-testid="stHeader"],
 div[data-testid="stToolbar"],
 #MainMenu,
@@ -34,7 +31,6 @@ footer,
     height: 0px !important;
 }
 
-/* Base Font & Background */
 html, body, [class*="css"] {
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
@@ -43,7 +39,6 @@ html, body, [class*="css"] {
     background: linear-gradient(180deg, #F4F7F4 0%, #E9EFE9 100%);
 }
 
-/* Layout Container Default Desktop */
 .main .block-container {
     padding-top: 1rem !important;
     padding-bottom: 2rem !important;
@@ -52,7 +47,6 @@ html, body, [class*="css"] {
     max-width: 1200px;
 }
 
-/* BANNER INTRO: HIJAU EUCALYPTUS, MERAH & PUTIH */
 .intro-banner-eucalyptus {
     background: linear-gradient(135deg, #1B3B22 0%, #2E5A36 60%, #990000 100%);
     color: #FFFFFF;
@@ -67,7 +61,6 @@ html, body, [class*="css"] {
     gap: 15px;
 }
 
-/* BADGE MERAH - WE CARE WE DO WE WIN */
 .motto-badge-red {
     display: inline-block;
     background: #C8102E;
@@ -100,7 +93,6 @@ html, body, [class*="css"] {
     opacity: 0.95;
 }
 
-/* Vektor Pohon Eucalyptus Styling */
 .eucalyptus-tree-svg {
     width: 90px;
     height: 90px;
@@ -109,7 +101,6 @@ html, body, [class*="css"] {
     opacity: 0.95;
 }
 
-/* Metric Cards Styling */
 div[data-testid="stMetric"] {
     background: #FFFFFF !important;
     padding: 0.9rem 1rem !important;
@@ -136,7 +127,6 @@ div[data-testid="stMetricValue"] > div {
     font-size: 1.4rem !important;
 }
 
-/* Primary Buttons Styling */
 div.stButton > button {
     background: linear-gradient(135deg, #2E5A36 0%, #1B3B22 100%) !important;
     color: #FFFFFF !important;
@@ -155,7 +145,6 @@ div.stButton > button:hover {
     box-shadow: 0 6px 18px rgba(200, 16, 46, 0.35) !important;
 }
 
-/* Expander Styling */
 .streamlit-expanderHeader {
     background-color: #FFFFFF !important;
     color: #1E293B !important;
@@ -166,14 +155,12 @@ div.stButton > button:hover {
     padding: 0.7rem 0.9rem !important;
 }
 
-/* Form Inputs */
 div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {
     border-radius: 10px !important;
     border-color: #CBD5E1 !important;
     background-color: #FFFFFF !important;
 }
 
-/* Tabs Styling */
 .stTabs [data-baseweb="tab-list"] {
     gap: 6px;
     background-color: #E2E8F0;
@@ -193,7 +180,6 @@ div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {
     border-bottom: 3px solid #C8102E;
 }
 
-/* Table Styling */
 div[data-testid="stDataFrame"] {
     background: #FFFFFF;
     border-radius: 12px;
@@ -202,9 +188,6 @@ div[data-testid="stDataFrame"] {
     border: 1px solid #E2E8F0;
 }
 
-/* ========================================================= */
-/* 📱 OPTIMALISASI KHUSUS LAYAR HP (MOBILE RESPONSIVE)       */
-/* ========================================================= */
 @media (max-width: 768px) {
     .main .block-container {
         padding-top: 0.2rem !important;
@@ -282,7 +265,6 @@ def load_data():
                 df[col] = None
         return df[COLUMNS]
     except Exception as e:
-        st.error(f"⚠️ Eror Koneksi Data: {e}")
         return pd.DataFrame(columns=COLUMNS)
 
 def load_users():
@@ -305,7 +287,6 @@ if "user_pj" not in st.session_state:
 if "user_role" not in st.session_state:
     st.session_state["user_role"] = "User"
 
-# SVG Pohon Eucalyptus
 EUCALYPTUS_SVG = """<svg class="eucalyptus-tree-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M48 92 C 48 60, 52 40, 50 10 C 50 10, 47 35, 45 92 Z" fill="#FFFFFF" opacity="0.95"/>
 <path d="M50 55 C 60 45, 75 42, 82 38 C 72 46, 58 52, 50 58 Z" fill="#FFFFFF" opacity="0.9"/>
@@ -333,7 +314,6 @@ if not st.session_state["logged_in"]:
     
     tab_login, tab_register = st.tabs(["🔑 Login Masuk", "📝 Pendaftaran User"])
     
-    # TAB LOGIN
     with tab_login:
         st.subheader("Akses Akun Operasional")
         with st.form("form_login"):
@@ -361,9 +341,8 @@ if not st.session_state["logged_in"]:
                         else:
                             st.error("❌ Nama Penanggung Jawab atau Kode Unik salah!")
                     else:
-                        st.error("❌ Belum ada akun terdaftar. Silakan lakukan pendaftaran terlebih dahulu!")
+                        st.error("❌ Belum ada akun terdaftar di database. Silakan daftarkan akun baru!")
 
-    # TAB REGISTRASI
     with tab_register:
         st.subheader("Registrasi Penanggung Jawab Baru")
         with st.form("form_register"):
@@ -430,7 +409,6 @@ m4.metric("Actual TK", f"{int(total_a_tk)} Orang")
 
 st.write("")
 
-# 1. FORM INPUT DATA KERJA BARU
 with st.expander("📝 Form Input / Tambah Data Kerja Lapangan", expanded=False):
     with st.form("form_monitoring", clear_on_submit=True):
         st.subheader("📌 Informasi Utama Petak")
@@ -498,7 +476,6 @@ with st.expander("📝 Form Input / Tambah Data Kerja Lapangan", expanded=False)
                 final_rincian = f"{status_kerja} - {rincian_input.strip()}" if rincian_input.strip() else status_kerja
 
                 spk_val = spk_input.strip() if spk_input.strip() else "-"
-
                 no_baru = len(df) + 1 if not df.empty else 1
                 
                 new_row = pd.DataFrame([{
@@ -522,15 +499,9 @@ with st.expander("📝 Form Input / Tambah Data Kerja Lapangan", expanded=False)
                 
                 updated_df = pd.concat([df, new_row], ignore_index=True)
                 safe_gsheets_update("Sheet1", updated_df)
-                
-                if spk_val == "-":
-                    st.warning(f"⚠️ Data Petak '{id_petak}' berhasil disimpan, **namun Nomor SPK belum terisi!** Silakan lengkapi pada menu 'Lengkapi Nomor SPK'.")
-                else:
-                    st.success(f"✅ Data Petak '{id_petak}' (SPK: {spk_val}) berhasil disimpan!")
-                
+                st.success(f"✅ Data Petak '{id_petak}' berhasil disimpan!")
                 st.rerun()
 
-# 2. MENU KHUSUS USER: LENGKAPI NOMOR SPK
 with st.expander("📋 Lengkapi Nomor SPK yang Belum Terisi", expanded=False):
     if df.empty:
         st.info("Belum ada data kegiatan.")
@@ -544,8 +515,6 @@ with st.expander("📋 Lengkapi Nomor SPK yang Belum Terisi", expanded=False):
         if unfilled_df.empty:
             st.success("🎉 Semua kegiatan Anda sudah memiliki Nomor SPK yang lengkap!")
         else:
-            st.warning(f"📌 Terdapat **{len(unfilled_df)} kegiatan** milik Anda yang Nomor SPK-nya masih kosong.")
-            
             options_spk = {}
             for idx, row in unfilled_df.iterrows():
                 label = f"ID: {row['ID Petak']} | Kegiatan: {row['Jenis Kegiatan']} | Luas: {row['Luas']} Ha"
@@ -564,94 +533,33 @@ with st.expander("📋 Lengkapi Nomor SPK yang Belum Terisi", expanded=False):
                     else:
                         df.at[target_idx, "SPK"] = input_spk_baru.strip()
                         safe_gsheets_update("Sheet1", df)
-                        st.success(f"✅ Nomor SPK untuk Petak '{df.at[target_idx, 'ID Petak']}' berhasil diperbarui!")
+                        st.success("✅ Nomor SPK berhasil diperbarui!")
                         st.rerun()
 
-# 3. PANEL ADMINISTRATOR (EDIT & HAPUS)
 if is_admin:
     with st.expander("🛠️ Panel Administrator (Pengelolaan Data)", expanded=False):
-        if df.empty:
-            st.info("Belum ada data untuk dikelola.")
-        else:
-            st.subheader("Edit atau Hapus Baris Data Lapangan")
-            
+        if not df.empty:
             options_list = [f"Baris {idx + 1} | ID: {row['ID Petak']} | SPK: {row.get('SPK', '-')} | PJ: {row['Penanggung Jawab']}" for idx, row in df.iterrows()]
-            selected_option = st.selectbox("Pilih Data yang Ingin Di-Edit / Dihapus:", options_list)
-            
+            selected_option = st.selectbox("Pilih Data:", options_list)
             selected_idx = options_list.index(selected_option)
-            selected_row = df.iloc[selected_idx]
             
-            col_act1, col_act2 = st.columns(2)
-            
-            with col_act2:
-                if st.button("🗑️ HAPUS BARIS INI", use_container_width=True):
-                    df_dropped = df.drop(selected_idx).reset_index(drop=True)
-                    df_dropped["No"] = range(1, len(df_dropped) + 1)
-                    safe_gsheets_update("Sheet1", df_dropped)
-                    st.success("✅ Data berhasil dihapus dari Google Sheets!")
-                    st.rerun()
-            
-            with col_act1:
-                st.caption("Ubah data di bawah ini lalu simpan perubahan:")
-            
-            with st.form("form_edit_admin"):
-                edit_id = st.text_input("ID Petak", value=str(selected_row.get("ID Petak", "")))
-                edit_spk = st.text_input("Nomor SPK", value=str(selected_row.get("SPK", "")))
-                edit_pj = st.text_input("Penanggung Jawab", value=str(selected_row.get("Penanggung Jawab", "")))
-                edit_luas = st.number_input("Luas Area (Ha)", value=float(selected_row["Luas"]) if pd.notna(selected_row["Luas"]) else 0.0)
-                edit_act_prod = st.number_input("Actual Produktivitas (Ha)", value=float(selected_row["Actual Produktivitas"]) if pd.notna(selected_row["Actual Produktivitas"]) else 0.0)
-                
-                btn_update = st.form_submit_button("✏️ SIMPAN PERUBAHAN ADMIN", use_container_width=True)
-                if btn_update:
-                    df.at[selected_idx, "ID Petak"] = edit_id.strip()
-                    df.at[selected_idx, "SPK"] = edit_spk.strip() if edit_spk.strip() else "-"
-                    df.at[selected_idx, "Penanggung Jawab"] = edit_pj.strip()
-                    df.at[selected_idx, "Luas"] = edit_luas
-                    df.at[selected_idx, "Actual Produktivitas"] = edit_act_prod
-                    
-                    prod_hari_ini = min(edit_act_prod, edit_luas)
-                    sisa_luas = max(0.0, edit_luas - prod_hari_ini)
-                    df.at[selected_idx, "Produktivitas Sampai Hari ini"] = prod_hari_ini
-                    df.at[selected_idx, "Sisa luas belum dikerjakan"] = sisa_luas
-                    
-                    safe_gsheets_update("Sheet1", df)
-                    st.success("✅ Perubahan berhasil disimpan oleh Administrator!")
-                    st.rerun()
+            if st.button("🗑️ HAPUS BARIS INI", use_container_width=True):
+                df_dropped = df.drop(selected_idx).reset_index(drop=True)
+                df_dropped["No"] = range(1, len(df_dropped) + 1)
+                safe_gsheets_update("Sheet1", df_dropped)
+                st.success("✅ Data berhasil dihapus!")
+                st.rerun()
 
-# 4. TABEL MONITORING DATA LAPANGAN
 st.subheader("📊 Tabel Monitoring Real-time")
-
-if not df.empty:
-    if "Sisa luas belum dikerjakan" in df.columns:
-        user_mask = df["Penanggung Jawab"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
-        user_df = df[user_mask]
-        sisa_series = pd.to_numeric(user_df["Sisa luas belum dikerjakan"], errors="coerce").fillna(0)
-        on_progress_count = (sisa_series > 0).sum()
-        if on_progress_count > 0:
-            st.warning(f"⚠️ **Alert On Progress ({st.session_state['user_pj']})**: Anda memiliki **{on_progress_count} kegiatan** yang masih berstatus **On Progress**.")
-
-    if "SPK" in df.columns:
-        spk_series = df["SPK"].astype(str).str.strip()
-        empty_spk_mask = df["SPK"].isna() | (spk_series == "") | (spk_series == "-") | (spk_series == "None") | (spk_series == "nan")
-        
-        user_empty_spk = df[
-            (df["Penanggung Jawab"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()) &
-            empty_spk_mask
-        ]
-        if not user_empty_spk.empty:
-            st.error(f"🔔 **PENGINGAT SPK KOSONG**: Terdapat **{len(user_empty_spk)} data** milik Anda yang **Nomor SPK-nya belum terisi!** Silakan lengkapi di menu **'📋 Lengkapi Nomor SPK'**.")
-
 view_option = st.radio("Tampilkan Filter Data:", ["Khusus Data Saya", "Semua Data Tim Lapangan"], horizontal=True)
 
 filtered_df = df.copy()
-
 if view_option == "Khusus Data Saya" and not filtered_df.empty:
     filtered_df = filtered_df[
         filtered_df["Penanggung Jawab"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
     ]
 
 search_term = st.text_input("🔍 Cari Data (ID Petak / SPK / Kegiatan / PJ):", placeholder="Ketik kata kunci...")
-
 if search_term and not filtered_df.empty:
     filtered_df = filtered_df[
         filtered_df["ID Petak"].astype(str).str.contains(search_term, case=False, na=False) |
@@ -661,5 +569,4 @@ if search_term and not filtered_df.empty:
         filtered_df["Rincian"].astype(str).str.contains(search_term, case=False, na=False)
     ]
 
-st.caption("💡 *Petunjuk Mobile: Geser tabel ke kanan/kiri untuk melihat rincian kolom.*")
 st.dataframe(filtered_df, use_container_width=True, hide_index=True)
