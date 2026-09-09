@@ -262,6 +262,16 @@ COLUMNS = [
 
 USER_COLUMNS = ["Penanggung Jawab", "Kode Unik", "Role"]
 
+def safe_gsheets_update(worksheet_name, data_df):
+    try:
+        conn.update(spreadsheet=SPREADSHEET_URL, worksheet=worksheet_name, data=data_df)
+        return True
+    except Exception as e:
+        if "Response [200]" in str(e):
+            return True
+        else:
+            raise e
+
 def load_data():
     try:
         df = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", ttl=0)
@@ -295,7 +305,7 @@ if "user_pj" not in st.session_state:
 if "user_role" not in st.session_state:
     st.session_state["user_role"] = "User"
 
-# SVG Pohon Eucalyptus (String Rata Kiri Tanpa Indentasi)
+# SVG Pohon Eucalyptus
 EUCALYPTUS_SVG = """<svg class="eucalyptus-tree-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M48 92 C 48 60, 52 40, 50 10 C 50 10, 47 35, 45 92 Z" fill="#FFFFFF" opacity="0.95"/>
 <path d="M50 55 C 60 45, 75 42, 82 38 C 72 46, 58 52, 50 58 Z" fill="#FFFFFF" opacity="0.9"/>
@@ -379,7 +389,7 @@ if not st.session_state["logged_in"]:
                     }])
                     updated_users = pd.concat([df_users, new_user], ignore_index=True)
                     try:
-                        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Users", data=updated_users)
+                        safe_gsheets_update("Users", updated_users)
                         st.success("✅ Pendaftaran berhasil! Silakan pindah ke tab 'Login Masuk'.")
                     except Exception as e:
                         st.error(f"⚠️ Gagal menyimpan akun: {e}")
@@ -390,7 +400,6 @@ if not st.session_state["logged_in"]:
 df = load_data()
 is_admin = str(st.session_state.get("user_role", "User")).strip().lower() == "admin"
 
-# Header Intro Main Dashboard
 role_badge = "👑 Administrator" if is_admin else "👤 Field Officer"
 st.markdown(f"""<div class="intro-banner-eucalyptus">
 <div>
@@ -401,7 +410,6 @@ st.markdown(f"""<div class="intro-banner-eucalyptus">
 {EUCALYPTUS_SVG}
 </div>""", unsafe_allow_html=True)
 
-# Logout Button
 col_space, col_logout = st.columns([3, 1.5])
 with col_logout:
     if st.button("🚪 Keluar Akun", use_container_width=True):
@@ -410,7 +418,6 @@ with col_logout:
         st.session_state["user_role"] = "User"
         st.rerun()
 
-# Ringkasan Metrik Utama
 total_luas = pd.to_numeric(df["Luas"], errors="coerce").fillna(0).sum() if not df.empty else 0
 total_r_tk = pd.to_numeric(df["Rencana Tenaga Kerja"], errors="coerce").fillna(0).sum() if not df.empty else 0
 total_a_tk = pd.to_numeric(df["Actual Tenaga Kerja"], errors="coerce").fillna(0).sum() if not df.empty else 0
@@ -514,7 +521,7 @@ with st.expander("📝 Form Input / Tambah Data Kerja Lapangan", expanded=False)
                 }])
                 
                 updated_df = pd.concat([df, new_row], ignore_index=True)
-                conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=updated_df)
+                safe_gsheets_update("Sheet1", updated_df)
                 
                 if spk_val == "-":
                     st.warning(f"⚠️ Data Petak '{id_petak}' berhasil disimpan, **namun Nomor SPK belum terisi!** Silakan lengkapi pada menu 'Lengkapi Nomor SPK'.")
@@ -556,7 +563,7 @@ with st.expander("📋 Lengkapi Nomor SPK yang Belum Terisi", expanded=False):
                         st.error("❌ Nomor SPK tidak boleh kosong!")
                     else:
                         df.at[target_idx, "SPK"] = input_spk_baru.strip()
-                        conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=df)
+                        safe_gsheets_update("Sheet1", df)
                         st.success(f"✅ Nomor SPK untuk Petak '{df.at[target_idx, 'ID Petak']}' berhasil diperbarui!")
                         st.rerun()
 
@@ -580,7 +587,7 @@ if is_admin:
                 if st.button("🗑️ HAPUS BARIS INI", use_container_width=True):
                     df_dropped = df.drop(selected_idx).reset_index(drop=True)
                     df_dropped["No"] = range(1, len(df_dropped) + 1)
-                    conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=df_dropped)
+                    safe_gsheets_update("Sheet1", df_dropped)
                     st.success("✅ Data berhasil dihapus dari Google Sheets!")
                     st.rerun()
             
@@ -607,14 +614,13 @@ if is_admin:
                     df.at[selected_idx, "Produktivitas Sampai Hari ini"] = prod_hari_ini
                     df.at[selected_idx, "Sisa luas belum dikerjakan"] = sisa_luas
                     
-                    conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=df)
+                    safe_gsheets_update("Sheet1", df)
                     st.success("✅ Perubahan berhasil disimpan oleh Administrator!")
                     st.rerun()
 
 # 4. TABEL MONITORING DATA LAPANGAN
 st.subheader("📊 Tabel Monitoring Real-time")
 
-# Alert Banner Pengingat
 if not df.empty:
     if "Sisa luas belum dikerjakan" in df.columns:
         user_mask = df["Penanggung Jawab"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
