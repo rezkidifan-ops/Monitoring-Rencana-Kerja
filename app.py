@@ -172,37 +172,97 @@ if not st.session_state["logged_in"]:
                     st.error("❌ Nama Penanggung Jawab dan Kode Unik wajib diisi!")
                 else:
                     df_users = load_users()
-                    
                     new_user = pd.DataFrame([{
                         "Penanggung Jawab": reg_pj.strip(), 
                         "Kode Unik": str(reg_kode.strip()),
                         "Role": "User"
                     }])
-                    
                     updated_users = pd.concat([df_users, new_user], ignore_index=True)
-                    
                     try:
                         conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Users", data=updated_users)
-                        st.success(f"✅ Pendaftaran '{reg_pj}' berhasil dan tersimpan ke Sheet! Silakan pindah ke tab 'Login Masuk'.")
+                        st.success(f"✅ Pendaftaran '{reg_pj}' berhasil! Silakan pindah ke tab 'Login Masuk'.")
                     except Exception as e:
                         st.error(f"⚠️ Gagal menyimpan ke Google Sheet: {e}")
 
     st.stop()
 
-# ----------------- DASHBOARD UTAMA (SETELAH BERHASIL LOGIN) -----------------
+# ----------------- DASHBOARD UTAMA & FORM OPERASIONAL (SETELAH LOGIN) -----------------
 st.markdown(f"""<div class="intro-banner-eucalyptus">
 <div>
 <div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
-<h1>Dashboard Monitoring HTI</h1>
-<p>Selamat datang, <b>{st.session_state['user_pj']}</b> ({st.session_state['user_role']})</p>
+<h1>Dashboard Monitoring HTI Eucalyptus</h1>
+<p>Halo, <b>{st.session_state['user_pj']}</b> ({st.session_state['user_role']})</p>
 </div>
 </div>""", unsafe_allow_html=True)
 
-st.success("🎉 Anda berhasil masuk ke sistem monitoring!")
+menu_tabs = st.tabs(["📊 Lihat Data & Monitoring", "➕ Input Data Baru", "🚪 Akun / Logout"])
 
-# Tombol Logout
-if st.button("🚪 Keluar / Logout"):
-    st.session_state["logged_in"] = False
-    st.session_state["user_pj"] = ""
-    st.session_state["user_role"] = "User"
-    st.rerun()
+with menu_tabs[0]:
+    st.subheader("Data Operasional Lapangan (Sheet1)")
+    df_main = load_data()
+    if not df_main.empty:
+        st.dataframe(df_main, use_container_width=True)
+    else:
+        st.info("Belum ada data operasional di Sheet1.")
+
+with menu_tabs[1]:
+    st.subheader("Form Input Aktivitas Operasional")
+    with st.form("form_input_ops"):
+        col1, col2 = st.columns(2)
+        with col1:
+            id_petak = st.text_input("ID Petak")
+            spk = st.text_input("Nomor SPK")
+            jenis_kegiatan = st.text_input("Jenis Kegiatan")
+            luas = st.number_input("Luas (Ha)", min_value=0.0, format="%.2f")
+            tgl_rencana = st.date_input("Tanggal Rencana Kerja", value=datetime.today())
+            tgl_mulai = st.date_input("Tanggal Mulai Bekerja", value=datetime.today())
+            tgl_selesai = st.date_input("Tanggal Selesai Kerja", value=datetime.today())
+        with col2:
+            rencana_tk = st.number_input("Rencana Tenaga Kerja", min_value=0, step=1)
+            actual_tk = st.number_input("Actual Tenaga Kerja", min_value=0, step=1)
+            rencana_prod = st.number_input("Rencana Produktivitas", min_value=0.0, format="%.2f")
+            actual_prod = st.number_input("Actual Produktivitas", min_value=0.0, format="%.2f")
+            prod_hari_ini = st.number_input("Produktivitas Sampai Hari ini", min_value=0.0, format="%.2f")
+            sisa_luas = st.number_input("Sisa Luas Belum Dikerjakan", min_value=0.0, format="%.2f")
+            rincian = st.text_area("Rincian / Keterangan")
+        
+        btn_submit_ops = st.form_submit_button("💾 SIMPAN DATA OPERASIONAL", use_container_width=True)
+        
+        if btn_submit_ops:
+            df_existing = load_data()
+            no_baru = len(df_existing) + 1
+            new_row = pd.DataFrame([{
+                "No": no_baru,
+                "ID Petak": id_petak,
+                "SPK": spk,
+                "Jenis Kegiatan": jenis_kegiatan,
+                "Luas": luas,
+                "Penanggung Jawab": st.session_state["user_pj"],
+                "Tanggal Rencana Kerja": str(tgl_rencana),
+                "Tanggal Mulai Bekerja": str(tgl_mulai),
+                "Tanggal Selesai Kerja": str(tgl_selesai),
+                "Rencana Tenaga Kerja": rencana_tk,
+                "Actual Tenaga Kerja": actual_tk,
+                "Rencana Produktivitas": rencana_prod,
+                "Actual Produktivitas": actual_prod,
+                "Produktivitas Sampai Hari ini": prod_hari_ini,
+                "Sisa luas belum dikerjakan": sisa_luas,
+                "Rincian": rincian
+            }])
+            
+            updated_df = pd.concat([df_existing, new_row], ignore_index=True)
+            try:
+                conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=updated_df)
+                st.success("✅ Data operasional berhasil disimpan ke Sheet1!")
+            except Exception as e:
+                st.error(f"⚠️ Gagal menyimpan data ke Sheet1: {e}")
+
+with menu_tabs[2]:
+    st.subheader("Pengaturan Akun")
+    st.write(f"Anda masuk sebagai: **{st.session_state['user_pj']}**")
+    st.write(f"Role Akses: **{st.session_state['user_role']}**")
+    if st.button("🚪 Keluar / Logout", use_container_width=True):
+        st.session_state["logged_in"] = False
+        st.session_state["user_pj"] = ""
+        st.session_state["user_role"] = "User"
+        st.rerun()
