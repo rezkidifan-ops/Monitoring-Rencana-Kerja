@@ -140,7 +140,6 @@ if not st.session_state["logged_in"]:
                 else:
                     df_users = load_users()
                     if not df_users.empty:
-                        # Membersihkan format string dan menghilangkan desimal .0 jika dibaca angka oleh pandas
                         df_users["Penanggung Jawab Clean"] = df_users["Penanggung Jawab"].astype(str).str.strip().str.lower()
                         df_users["Kode Unik Clean"] = df_users["Kode Unik"].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
                         
@@ -188,4 +187,22 @@ if not st.session_state["logged_in"]:
                     except Exception as e:
                         st.error(f"⚠️ Gagal menyimpan ke Google Sheet: {e}")
 
-        st.stop()
+    st.stop()
+
+# ----------------- DASHBOARD UTAMA (SETELAH BERHASIL LOGIN) -----------------
+st.markdown(f"""<div class="intro-banner-eucalyptus">
+<div>
+<div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
+<h1>Dashboard Monitoring HTI</h1>
+<p>Selamat datang, <b>{st.session_state['user_pj']}</b> ({st.session_state['user_role']})</p>
+</div>
+</div>""", unsafe_allow_html=True)
+
+st.success("🎉 Anda berhasil masuk ke sistem monitoring!")
+
+# Tombol Logout
+if st.button("🚪 Keluar / Logout"):
+    st.session_state["logged_in"] = False
+    st.session_state["user_pj"] = ""
+    st.session_state["user_role"] = "User"
+    st.rerun()
