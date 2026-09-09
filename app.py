@@ -84,7 +84,6 @@ USER_COLUMNS = ["Penanggung Jawab", "Kode Unik", "Role"]
 
 def load_users():
     try:
-        # Membaca secara eksplisit tab 'Users' dari Google Sheet dengan memastikan ttl=0 agar tidak cache
         df_users = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="Users", ttl=0)
         if df_users is None or df_users.empty:
             return pd.DataFrame(columns=USER_COLUMNS)
@@ -141,11 +140,15 @@ if not st.session_state["logged_in"]:
                 else:
                     df_users = load_users()
                     if not df_users.empty:
-                        # Pencocokan data dengan mengabaikan perbedaan huruf besar/kecil dan spasi berlebih
+                        # Membersihkan format string dan menghilangkan desimal .0 jika dibaca angka oleh pandas
+                        df_users["Penanggung Jawab Clean"] = df_users["Penanggung Jawab"].astype(str).str.strip().str.lower()
+                        df_users["Kode Unik Clean"] = df_users["Kode Unik"].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+                        
                         matched = df_users[
-                            (df_users["Penanggung Jawab"].astype(str).str.strip().str.lower() == pj_input.strip().lower()) &
-                            (df_users["Kode Unik"].astype(str).str.strip() == kode_input.strip())
+                            (df_users["Penanggung Jawab Clean"] == pj_input.strip().lower()) &
+                            (df_users["Kode Unik Clean"] == kode_input.strip())
                         ]
+                        
                         if not matched.empty:
                             st.session_state["logged_in"] = True
                             st.session_state["user_pj"] = matched.iloc[0]["Penanggung Jawab"]
