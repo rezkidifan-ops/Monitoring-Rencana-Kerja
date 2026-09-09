@@ -84,6 +84,7 @@ USER_COLUMNS = ["Penanggung Jawab", "Kode Unik", "Role"]
 
 def load_users():
     try:
+        # Membaca secara eksplisit tab 'Users' dari Google Sheet dengan memastikan ttl=0 agar tidak cache
         df_users = conn.read(spreadsheet=SPREADSHEET_URL, worksheet="Users", ttl=0)
         if df_users is None or df_users.empty:
             return pd.DataFrame(columns=USER_COLUMNS)
@@ -140,8 +141,9 @@ if not st.session_state["logged_in"]:
                 else:
                     df_users = load_users()
                     if not df_users.empty:
+                        # Pencocokan data dengan mengabaikan perbedaan huruf besar/kecil dan spasi berlebih
                         matched = df_users[
-                            (df_users["Penanggung Jawab"].astype(str).str.strip().str.upper() == pj_input.strip().upper()) &
+                            (df_users["Penanggung Jawab"].astype(str).str.strip().str.lower() == pj_input.strip().lower()) &
                             (df_users["Kode Unik"].astype(str).str.strip() == kode_input.strip())
                         ]
                         if not matched.empty:
