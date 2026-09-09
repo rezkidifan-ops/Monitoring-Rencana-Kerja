@@ -140,6 +140,7 @@ if not st.session_state["logged_in"]:
                 else:
                     df_users = load_users()
                     if not df_users.empty:
+                        # Membersihkan format string dan menghilangkan desimal .0 jika dibaca angka oleh pandas
                         df_users["Penanggung Jawab Clean"] = df_users["Penanggung Jawab"].astype(str).str.strip().str.lower()
                         df_users["Kode Unik Clean"] = df_users["Kode Unik"].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
                         
@@ -180,7 +181,7 @@ if not st.session_state["logged_in"]:
                     updated_users = pd.concat([df_users, new_user], ignore_index=True)
                     try:
                         conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Users", data=updated_users)
-                        st.success(f"✅ Pendaftaran '{reg_pj}' berhasil! Silakan pindah ke tab 'Login Masuk'.")
+                        st.success(f"✅ Pendaftaran '{reg_pj}' berhasil dan tersimpan ke Sheet! Silakan pindah ke tab 'Login Masuk'.")
                     except Exception as e:
                         st.error(f"⚠️ Gagal menyimpan ke Google Sheet: {e}")
 
@@ -207,12 +208,20 @@ with menu_tabs[0]:
 
 with menu_tabs[1]:
     st.subheader("Form Input Aktivitas Operasional")
+    
+    # Ambil daftar unik ID Petak dari data yang sudah ada untuk opsi dropdown pilihan cepat
+    df_main_existing = load_data()
+    list_petak = df_main_existing["ID Petak"].dropna().unique().tolist() if not df_main_existing.empty else []
+    list_kegiatan = ["Land Clearing", "Tanam", "Planing", "Maintenance", "Pemupukan", "Penyemprotan", "Panen"]
+
     with st.form("form_input_ops"):
         col1, col2 = st.columns(2)
         with col1:
-            id_petak = st.text_input("ID Petak")
+            id_petak = st.selectbox("ID Petak (Pilih dari data yang ada)", options=["-- Pilih --"] + list_petak)
+            custom_petak = st.text_input("Atau Ketik ID Petak Baru (jika belum ada di atas)")
+            
             spk = st.text_input("Nomor SPK")
-            jenis_kegiatan = st.text_input("Jenis Kegiatan")
+            jenis_kegiatan = st.selectbox("Jenis Kegiatan", options=list_kegiatan)
             luas = st.number_input("Luas (Ha)", min_value=0.0, format="%.2f")
             tgl_rencana = st.date_input("Tanggal Rencana Kerja", value=datetime.today())
             tgl_mulai = st.date_input("Tanggal Mulai Bekerja", value=datetime.today())
@@ -229,33 +238,38 @@ with menu_tabs[1]:
         btn_submit_ops = st.form_submit_button("💾 SIMPAN DATA OPERASIONAL", use_container_width=True)
         
         if btn_submit_ops:
-            df_existing = load_data()
-            no_baru = len(df_existing) + 1
-            new_row = pd.DataFrame([{
-                "No": no_baru,
-                "ID Petak": id_petak,
-                "SPK": spk,
-                "Jenis Kegiatan": jenis_kegiatan,
-                "Luas": luas,
-                "Penanggung Jawab": st.session_state["user_pj"],
-                "Tanggal Rencana Kerja": str(tgl_rencana),
-                "Tanggal Mulai Bekerja": str(tgl_mulai),
-                "Tanggal Selesai Kerja": str(tgl_selesai),
-                "Rencana Tenaga Kerja": rencana_tk,
-                "Actual Tenaga Kerja": actual_tk,
-                "Rencana Produktivitas": rencana_prod,
-                "Actual Produktivitas": actual_prod,
-                "Produktivitas Sampai Hari ini": prod_hari_ini,
-                "Sisa luas belum dikerjakan": sisa_luas,
-                "Rincian": rincian
-            }])
+            final_petak = custom_petak.strip() if (custom_petak and custom_petak.strip()) else (id_petak if id_petak != "-- Pilih --" else "")
             
-            updated_df = pd.concat([df_existing, new_row], ignore_index=True)
-            try:
-                conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=updated_df)
-                st.success("✅ Data operasional berhasil disimpan ke Sheet1!")
-            except Exception as e:
-                st.error(f"⚠️ Gagal menyimpan data ke Sheet1: {e}")
+            if not final_petak:
+                st.error("❌ ID Petak wajib diisi atau dipilih!")
+            else:
+                df_existing = load_data()
+                no_baru = len(df_existing) + 1
+                new_row = pd.DataFrame([{
+                    "No": no_baru,
+                    "ID Petak": final_petak,
+                    "SPK": spk,
+                    "Jenis Kegiatan": jenis_kegiatan,
+                    "Luas": luas,
+                    "Penanggung Jawab": st.session_state["user_pj"],
+                    "Tanggal Rencana Kerja": str(tgl_rencana),
+                    "Tanggal Mulai Bekerja": str(tgl_mulai),
+                    "Tanggal Selesai Kerja": str(tgl_selesai),
+                    "Rencana Tenaga Kerja": rencana_tk,
+                    "Actual Tenaga Kerja": actual_tk,
+                    "Rencana Produktivitas": rencana_prod,
+                    "Actual Produktivitas": actual_prod,
+                    "Produktivitas Sampai Hari ini": prod_hari_ini,
+                    "Sisa luas belum dikerjakan": sisa_luas,
+                    "Rincian": rincian
+                }])
+                
+                updated_df = pd.concat([df_existing, new_row], ignore_index=True)
+                try:
+                    conn.update(spreadsheet=SPREADSHEET_URL, worksheet="Sheet1", data=updated_df)
+                    st.success("✅ Data operasional berhasil disimpan ke Sheet1!")
+                except Exception as e:
+                    st.error(f"⚠️ Gagal menyimpan data ke Sheet1: {e}")
 
 with menu_tabs[2]:
     st.subheader("Pengaturan Akun")
