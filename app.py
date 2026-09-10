@@ -6,7 +6,7 @@ from streamlit_gsheets import GSheetsConnection
 # =========================================================
 # KONFIGURASI URL GOOGLE SHEET
 # =========================================================
-SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1qJMHdTkURQV7LQE_DfO3UiX_txepHVCXqRct3mrQlxs/edit?usp=drivesdk"
+SPREADSHEET_URL = "MASUKKAN_URL_GOOGLE_SHEET_ANDA_DI_SINI"
 
 # 1. PENGATURAN HALAMAN
 st.set_page_config(
@@ -175,16 +175,6 @@ div.stButton > button:hover {
     box-shadow: 0 6px 18px rgba(200, 16, 46, 0.35) !important;
 }
 
-.streamlit-expanderHeader {
-    background-color: #FFFFFF !important;
-    color: #1E293B !important;
-    font-weight: 700 !important;
-    font-size: 0.95rem !important;
-    border-radius: 12px !important;
-    border: 1px solid #D1D5DB !important;
-    padding: 0.7rem 0.9rem !important;
-}
-
 div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {
     border-radius: 10px !important;
     border-color: #CBD5E1 !important;
@@ -198,7 +188,7 @@ div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {
     border-radius: 12px;
 }
 .stTabs [data-baseweb="tab"] {
-    height: 2.6rem;
+    height: 2.8rem;
     border-radius: 8px;
     font-weight: 700;
     font-size: 0.88rem;
@@ -436,8 +426,18 @@ m4.metric("Aktual TK", f"{int(total_a_tk)} Orang")
 
 st.write("")
 
-# FORM INPUT OPERASIONAL
-with st.expander("Input Data Lapangan", expanded=False):
+# =========================================================
+# 3 MENU UTAMA (TAB NAVIGASI)
+# =========================================================
+tab_input, tab_rencana, tab_jadwal = st.tabs([
+    "Input Data", 
+    "Rencana Kerja", 
+    "Jadwal Kerja Selanjutnya"
+])
+
+# TAB 1: INPUT DATA
+with tab_input:
+    st.subheader("Formulir Input Data Lapangan")
     list_petak_existing = []
     if not df.empty and "ID Petak" in df.columns:
         list_petak_existing = [str(x).strip() for x in df["ID Petak"].dropna().unique() if str(x).strip() != ""]
@@ -449,7 +449,7 @@ with st.expander("Input Data Lapangan", expanded=False):
     )
 
     with st.form("form_monitoring", clear_on_submit=True):
-        st.subheader("Informasi Petak")
+        st.write("Informasi Petak")
         col_f1, col_f2 = st.columns(2)
         
         with col_f1:
@@ -477,7 +477,7 @@ with st.expander("Input Data Lapangan", expanded=False):
         ])
         
         st.markdown("---")
-        st.subheader("Jadwal Operasional")
+        st.write("Jadwal Operasional")
         c_tgl1, c_tgl2, c_tgl3 = st.columns(3)
         with c_tgl1:
             tgl_rencana = st.date_input("Tanggal Rencana")
@@ -487,7 +487,7 @@ with st.expander("Input Data Lapangan", expanded=False):
             tgl_selesai = st.date_input("Tanggal Selesai")
         
         st.markdown("---")
-        st.subheader("Alokasi Tenaga Kerja & Target")
+        st.write("Alokasi Tenaga Kerja & Target")
         
         col_tk1, col_tk2 = st.columns(2)
         with col_tk1:
@@ -536,7 +536,7 @@ with st.expander("Input Data Lapangan", expanded=False):
                     "Actual Tenaga Kerja": actual_tk,
                     "Rencana Produktivitas": rencana_prod,
                     "Actual Produktivitas": actual_prod,
-                    "Produktivitas Sampai Hari ini": prod_hari_ini,
+                    "Produktivitas Sampai Hari ini": prod_kumulatif,
                     "Sisa luas belum dikerjakan": sisa_luas,
                     "Rincian": final_rincian
                 }])
@@ -546,8 +546,50 @@ with st.expander("Input Data Lapangan", expanded=False):
                 st.success(f"Data petak '{id_petak}' berhasil disimpan.")
                 st.rerun()
 
-# PANEL UPDATE SPK KOSONG
-with st.expander("Perbarui Nomor SPK", expanded=False):
+    # Panel Admin di dalam tab Input Data jika role admin
+    if is_admin:
+        st.markdown("---")
+        st.subheader("Panel Administrator")
+        if not df.empty:
+            options_list = [f"Baris {idx + 1} | ID: {row['ID Petak']} | SPK: {row.get('SPK', '-')} | User: {row['Username']}" for idx, row in df.iterrows()]
+            selected_option = st.selectbox("Pilih Data untuk Dihapus", options_list)
+            selected_idx = options_list.index(selected_option)
+            
+            if st.button("Hapus Data Terpilih", use_container_width=True):
+                df_dropped = df.drop(selected_idx).reset_index(drop=True)
+                df_dropped["No"] = range(1, len(df_dropped) + 1)
+                safe_gsheets_update("Sheet1", df_dropped)
+                st.success("Data berhasil dihapus.")
+                st.rerun()
+
+# TAB 2: RENCANA KERJA
+with tab_rencana:
+    st.subheader("Monitoring Rencana Kerja")
+    view_option = st.radio("Tampilkan Data", ["Data Saya", "Semua Data Tim"], horizontal=True)
+
+    filtered_df = df.copy()
+    if view_option == "Data Saya" and not filtered_df.empty:
+        filtered_df = filtered_df[
+            filtered_df["Username"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
+        ]
+
+    search_term = st.text_input("Pencarian", placeholder="Ketik kata kunci...")
+    if search_term and not filtered_df.empty:
+        filtered_df = filtered_df[
+            filtered_df["ID Petak"].astype(str).str.contains(search_term, case=False, na=False) |
+            filtered_df["SPK"].astype(str).str.contains(search_term, case=False, na=False) |
+            filtered_df["Username"].astype(str).str.contains(search_term, case=False, na=False) |
+            filtered_df["Jenis Kegiatan"].astype(str).str.contains(search_term, case=False, na=False) |
+            filtered_df["Rincian"].astype(str).str.contains(search_term, case=False, na=False)
+        ]
+
+    st.dataframe(filtered_df, use_container_width=True, hide_index=True)
+
+# TAB 3: JADWAL KERJA SELANJUTNYA
+with tab_jadwal:
+    st.subheader("Jadwal Kerja Selanjutnya")
+    st.write("Kelengkapan nomor SPK dan agenda operasional lanjutan.")
+    
     if df.empty:
         st.info("Belum terdapat data kegiatan.")
     else:
@@ -565,7 +607,7 @@ with st.expander("Perbarui Nomor SPK", expanded=False):
                 label = f"ID: {row['ID Petak']} | Kegiatan: {row['Jenis Kegiatan']} | Luas: {row['Luas']} Ha"
                 options_spk[label] = idx
             
-            selected_label = st.selectbox("Pilih Kegiatan", list(options_spk.keys()))
+            selected_label = st.selectbox("Pilih Kegiatan Tanpa SPK", list(options_spk.keys()))
             target_idx = options_spk[selected_label]
             
             with st.form("form_update_spk_user"):
@@ -580,40 +622,3 @@ with st.expander("Perbarui Nomor SPK", expanded=False):
                         safe_gsheets_update("Sheet1", df)
                         st.success("Nomor SPK berhasil diperbarui.")
                         st.rerun()
-
-# PANEL KHUSUS ADMIN
-if is_admin:
-    with st.expander("Panel Administrator", expanded=False):
-        if not df.empty:
-            options_list = [f"Baris {idx + 1} | ID: {row['ID Petak']} | SPK: {row.get('SPK', '-')} | User: {row['Username']}" for idx, row in df.iterrows()]
-            selected_option = st.selectbox("Pilih Data", options_list)
-            selected_idx = options_list.index(selected_option)
-            
-            if st.button("Hapus Data Terpilih", use_container_width=True):
-                df_dropped = df.drop(selected_idx).reset_index(drop=True)
-                df_dropped["No"] = range(1, len(df_dropped) + 1)
-                safe_gsheets_update("Sheet1", df_dropped)
-                st.success("Data berhasil dihapus.")
-                st.rerun()
-
-# TABEL MONITORING & PENCARIAN
-st.subheader("Data Monitoring")
-view_option = st.radio("Tampilkan Data", ["Data Saya", "Semua Data Tim"], horizontal=True)
-
-filtered_df = df.copy()
-if view_option == "Data Saya" and not filtered_df.empty:
-    filtered_df = filtered_df[
-        filtered_df["Username"].astype(str).str.strip().str.upper() == st.session_state["user_pj"].strip().upper()
-    ]
-
-search_term = st.text_input("Pencarian", placeholder="Ketik kata kunci...")
-if search_term and not filtered_df.empty:
-    filtered_df = filtered_df[
-        filtered_df["ID Petak"].astype(str).str.contains(search_term, case=False, na=False) |
-        filtered_df["SPK"].astype(str).str.contains(search_term, case=False, na=False) |
-        filtered_df["Username"].astype(str).str.contains(search_term, case=False, na=False) |
-        filtered_df["Jenis Kegiatan"].astype(str).str.contains(search_term, case=False, na=False) |
-        filtered_df["Rincian"].astype(str).str.contains(search_term, case=False, na=False)
-    ]
-
-st.dataframe(filtered_df, use_container_width=True, hide_index=True)
