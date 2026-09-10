@@ -516,8 +516,8 @@ with b_col2:
     st.rerun()
 
 with b_col3:
-  if st.button("Jadwal Kerja Selanjutnya", use_container_width=True):
-    st.session_state["active_menu"] = "Jadwal Kerja Selanjutnya"
+  if st.button("Monitoring", use_container_width=True):
+    st.session_state["active_menu"] = "Monitoring"
     st.rerun()
 
 st.write("")
@@ -913,10 +913,10 @@ elif active_menu == "Rencana Kerja":
       )
 
 # =========================================================
-# KONTEN 3: JADWAL KERJA SELANJUTNYA
+# KONTEN 3: MONITORING
 # =========================================================
-elif active_menu == "Jadwal Kerja Selanjutnya":
-  st.subheader("Jadwal Kerja Selanjutnya")
+elif active_menu == "Monitoring":
+  st.subheader("Monitoring")
   st.write("Pemantauan kegiatan dan nomor SPK terdaftar.")
 
   if df.empty:
