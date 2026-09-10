@@ -180,7 +180,11 @@ COLUMNS = [
     "Tanggal Mulai Bekerja",
     "Tanggal Selesai Kerja",
     "Rencana Tenaga Kerja",
+    "Rencana Alat Berat",
+    "Rencana Operator",
     "Actual Tenaga Kerja",
+    "Actual Alat Berat",
+    "Actual Operator",
     "Rencana Produktivitas",
     "Actual Produktivitas",
     "Produktivitas Sampai Hari ini",
@@ -630,7 +634,11 @@ if active_menu == "Input ID Petak":
                 "Tanggal Mulai Bekerja": str(datetime.date.today()),
                 "Tanggal Selesai Kerja": str(datetime.date.today()),
                 "Rencana Tenaga Kerja": 0,
+                "Rencana Alat Berat": "-",
+                "Rencana Operator": "-",
                 "Actual Tenaga Kerja": 0,
+                "Actual Alat Berat": "-",
+                "Actual Operator": "-",
                 "Rencana Produktivitas": 0.0,
                 "Actual Produktivitas": 0.0,
                 "Produktivitas Sampai Hari ini": 0.0,
@@ -751,9 +759,15 @@ elif active_menu == "Rencana Kerja":
           tgl_selesai = st.date_input(
               "Tanggal Selesai Kerja", value=datetime.date.today()
           )
-        with col_rk2:
           rencana_tk = st.number_input(
               "Rencana Tenaga Kerja (Orang)", min_value=0, step=1
+          )
+        with col_rk2:
+          rencana_alat = st.text_input(
+              "Rencana Jenis Alat Berat", placeholder="Contoh: Excavator / -"
+          )
+          rencana_operator = st.text_input(
+              "Rencana Operator", placeholder="Nama Operator / -"
           )
           rencana_prod = st.number_input(
               "Rencana Produktivitas (Ha)", min_value=0.0, step=0.1
@@ -775,6 +789,12 @@ elif active_menu == "Rencana Kerja":
                 "%Y-%m-%d"
             )
             df.loc[idx, "Rencana Tenaga Kerja"] = rencana_tk
+            df.loc[idx, "Rencana Alat Berat"] = (
+                rencana_alat.strip() if rencana_alat.strip() else "-"
+            )
+            df.loc[idx, "Rencana Operator"] = (
+                rencana_operator.strip() if rencana_operator.strip() else "-"
+            )
             df.loc[idx, "Rencana Produktivitas"] = rencana_prod
 
             safe_gsheets_update(
@@ -794,10 +814,16 @@ elif active_menu == "Rencana Kerja":
           actual_tk = st.number_input(
               "Aktual Tenaga Kerja (Orang)", min_value=0, step=1
           )
+          actual_alat = st.text_input(
+              "Aktual Jenis Alat Berat", placeholder="Contoh: Excavator / -"
+          )
+          actual_operator = st.text_input(
+              "Aktual Operator", placeholder="Nama Operator / -"
+          )
+        with col_rl2:
           actual_prod = st.number_input(
               "Aktual Produktivitas (Ha)", min_value=0.0, step=0.1
           )
-        with col_rl2:
           rincian_input = st.text_area("Catatan Operasional / Rincian", height=95)
 
         submit_realisasi_btn = st.form_submit_button(
@@ -836,6 +862,12 @@ elif active_menu == "Rencana Kerja":
             )
 
             df.loc[idx, "Actual Tenaga Kerja"] = actual_tk
+            df.loc[idx, "Actual Alat Berat"] = (
+                actual_alat.strip() if actual_alat.strip() else "-"
+            )
+            df.loc[idx, "Actual Operator"] = (
+                actual_operator.strip() if actual_operator.strip() else "-"
+            )
             df.loc[idx, "Actual Produktivitas"] = actual_prod
             df.loc[idx, "Produktivitas Sampai Hari ini"] = prod_kumulatif
             df.loc[idx, "Sisa luas belum dikerjakan"] = sisa_luas
@@ -867,7 +899,11 @@ elif active_menu == "Rencana Kerja":
               "SPK",
               "Jenis Kegiatan",
               "Rencana Tenaga Kerja",
+              "Rencana Alat Berat",
+              "Rencana Operator",
               "Actual Tenaga Kerja",
+              "Actual Alat Berat",
+              "Actual Operator",
               "Rencana Produktivitas",
               "Actual Produktivitas",
               "Rincian",
@@ -902,6 +938,8 @@ elif active_menu == "Jadwal Kerja Selanjutnya":
               "Jenis Kegiatan",
               "Lokasi",
               "Tanggal Rencana Kerja",
+              "Rencana Alat Berat",
+              "Rencana Operator",
               "Keterangan",
           ]],
           use_container_width=True,
