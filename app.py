@@ -193,9 +193,7 @@ USER_COLUMNS = ["Username", "Password", "Role"]
 
 def safe_gsheets_update(worksheet_name, data_df):
   try:
-    conn.update(
-        spreadsheet=SPREADSHEET_URL, worksheet=worksheet_name, data=data_df
-    )
+    conn.update(worksheet=worksheet_name, data=data_df)
     return True
   except Exception as e:
     if "Response [200]" in str(e):
@@ -513,7 +511,6 @@ active_menu = st.session_state["active_menu"]
 # KONTEN 1: INPUT ID PETAK & UPDATE SPK TERPISAH
 # =========================================================
 if active_menu == "Input ID Petak":
-  # Sub-tab di dalam menu Input ID Petak untuk Pendaftaran & Update SPK
   sub_tab_reg, sub_tab_spk = st.tabs(
       ["Formulir Pendaftaran ID Petak", "Update Nomor SPK"]
   )
@@ -581,7 +578,6 @@ if active_menu == "Input ID Petak":
         if not id_petak.strip() or luas <= 0:
           st.error("ID Petak dan Luas wajib diisi dengan benar.")
         else:
-          # Pengecekan Duplikasi: ID Petak & Jenis Kegiatan sama ditolak
           is_duplicate = False
           if not df.empty:
             matched_dup = df[
@@ -606,9 +602,7 @@ if active_menu == "Input ID Petak":
           else:
             pj_final = st.session_state["user_pj"]
             no_baru = len(df) + 1 if not df.empty else 1
-            final_spk = (
-                spk_input.strip() if spk_input.strip() else "-"
-            )  # SPK opsional, jika kosong diisi "-"
+            final_spk = spk_input.strip() if spk_input.strip() else "-"
 
             new_row = pd.DataFrame([{
                 "No": no_baru,
@@ -684,13 +678,12 @@ if active_menu == "Input ID Petak":
               idx = matched_idx[0]
               df.loc[idx, "SPK"] = new_spk_input.strip()
 
-              # Simpan perubahan ke Google Sheets (buang kolom bantuan sementara)
               safe_gsheets_update(
                   "Sheet1", df.drop(columns=["Combo_Key_SPK"])
               )
               st.success(
-                  "Nomor SPK berhasil diperbarui untuk petak dan jenis"
-                  " kegiatan tersebut."
+                  "Nomor SPK berhasil diperbarui ke Google Sheets untuk petak"
+                  " dan jenis kegiatan tersebut."
               )
               st.rerun()
 
@@ -727,9 +720,6 @@ elif active_menu == "Rencana Kerja":
         ["Buat Rencana", "Update Realisasi"]
     )
 
-    # ------------------------------------------------_
-    # SUB-TAB 1: BUAT RENCANA
-    # ------------------------------------------------_
     with sub_tab_rencana:
       with st.form("form_buat_rencana"):
         selected_combo_r = st.selectbox(
@@ -780,9 +770,6 @@ elif active_menu == "Rencana Kerja":
             st.success("Rencana kerja berhasil disimpan.")
             st.rerun()
 
-    # ------------------------------------------------_
-    # SUB-TAB 2: UPDATE REALISASI
-    # ------------------------------------------------_
     with sub_tab_realisasi:
       with st.form("form_update_realisasi"):
         selected_combo_u = st.selectbox(
