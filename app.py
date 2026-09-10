@@ -519,8 +519,12 @@ active_menu = st.session_state["active_menu"]
 # KONTEN 1: INPUT ID PETAK
 # =========================================================
 if active_menu == "Input ID Petak":
-  sub_tab_reg, sub_tab_spk = st.tabs(
-      ["Formulir Pendaftaran ID Petak", "Update Nomor SPK"]
+  sub_tab_reg, sub_tab_spk, sub_tab_lama = st.tabs(
+      [
+          "Formulir Pendaftaran ID Petak",
+          "Update Nomor SPK",
+          "Input Kegiatan Lama Telah Selesai",
+      ]
   )
 
   with sub_tab_reg:
@@ -546,6 +550,7 @@ if active_menu == "Input ID Petak":
                 "Established - Tanam",
                 "Established - Tanam & Aquasorb",
                 "Established - Sulam",
+                "Established - Pupuk Dasar",
                 "Established - PPS",
                 "Established - PPS Dron",
                 "Pupuk",
@@ -689,6 +694,157 @@ if active_menu == "Input ID Petak":
               st.success("Nomor SPK berhasil diperbarui.")
               st.rerun()
 
+  with sub_tab_lama:
+    st.subheader("Input Kegiatan Lama Telah Selesai")
+    st.write(
+        "Gunakan formulir ini untuk mencatat kegiatan yang sudah ada dan selesai"
+        " sebelum aplikasi ini dibuat."
+    )
+
+    with st.form("form_input_kegiatan_lama", clear_on_submit=True):
+      col_l1, col_l2 = st.columns(2)
+
+      with col_l1:
+        id_petak_lama = st.text_input(
+            "ID Petak (Kegiatan Lama)", placeholder="Contoh: URUC031305"
+        )
+        spk_lama = st.text_input(
+            "Nomor SPK (Opsional)", placeholder="Contoh: 23542638253"
+        )
+        jenis_kegiatan_lama = st.selectbox(
+            "Jenis Kegiatan (Lama)",
+            [
+                "Established - PLTB",
+                "Established - Kuku Macan",
+                "Established - Parit",
+                "Established - Teras",
+                "Established - Lining+Sticking",
+                "Established - Tanam",
+                "Established - Tanam & Aquasorb",
+                "Established - Sulam",
+                "Established - Pupuk Dasar",
+                "Established - PPS",
+                "Established - PPS Dron",
+                "Pupuk",
+                "Sulam",
+                "Manual Weeding 1",
+                "Chemical Weeding 1",
+                "Chemical Weeding 2",
+                "Chemical Weeding 3",
+                "Chemical Weeding 4",
+                "Chemical Weeding 5",
+                "Chemical Weeding 6",
+                "Chemical Weeding 7",
+                "Pupuk Susulan 1",
+                "Pupuk Susulan 2",
+                "Maintenance - MW 1",
+                "Maintenance - CW 1",
+                "Maintenance - CW 2",
+                "Maintenance - CW 3",
+                "Maintenance - CW 4",
+                "Maintenance - CW 5",
+                "Maintenance - CW 6",
+                "Maintenance - CW 7",
+                "Maintenance - MW 2",
+                "Maintenance - MW 3",
+                "Maintenance - PS1",
+                "Maintenance - PS1 drone",
+                "Maintenance - HPT",
+                "Maintenance - HPT Drone",
+                "Maintenance - PS2 Drone",
+                "Maintenance - PS 2",
+                "Lainnya",
+            ],
+            key="sel_lama",
+        )
+        luas_lama = st.number_input(
+            "Luas Area (Ha) [Lama]", min_value=0.0, step=0.1, key="luas_lama"
+        )
+
+      with col_l2:
+        lokasi_lama = st.text_input(
+            "Lokasi / Wilayah (Lama)",
+            placeholder="Contoh: Sektor Utara",
+            key="lok_lama",
+        )
+        tgl_selesai_lama = st.date_input(
+            "Tanggal Selesai Kegiatan (Sebelumnya)",
+            value=datetime.date.today(),
+            key="tgl_lama",
+        )
+        keterangan_lama = st.text_area(
+            "Keterangan Tambahan / Catatan", height=95, key="ket_lama"
+        )
+
+      submitted_lama = st.form_submit_button(
+          "Simpan Kegiatan Lama", use_container_width=True
+      )
+
+      if submitted_lama:
+        if not id_petak_lama.strip() or luas_lama <= 0:
+          st.error("ID Petak dan Luas wajib diisi dengan benar.")
+        else:
+          is_duplicate = False
+          if not df.empty:
+            matched_dup = df[
+                (
+                    df["ID Petak"].astype(str).str.strip().str.upper()
+                    == id_petak_lama.strip().upper()
+                )
+                & (
+                    df["Jenis Kegiatan"].astype(str).str.strip()
+                    == jenis_kegiatan_lama
+                )
+            ]
+            if not matched_dup.empty:
+              is_duplicate = True
+
+          if is_duplicate:
+            st.error(
+                f"Data untuk ID Petak '{id_petak_lama.strip()}' dengan Jenis"
+                f" Kegiatan '{jenis_kegiatan_lama}' sudah tersedia."
+            )
+          else:
+            pj_final = st.session_state["user_pj"]
+            no_baru = len(df) + 1 if not df.empty else 1
+            final_spk = spk_lama.strip() if spk_lama.strip() else "-"
+            tgl_str = tgl_selesai_lama.strftime("%Y-%m-%d")
+
+            new_row = pd.DataFrame([{
+                "No": no_baru,
+                "ID Petak": id_petak_lama.strip(),
+                "SPK": final_spk,
+                "Jenis Kegiatan": jenis_kegiatan_lama,
+                "Luas": luas_lama,
+                "Lokasi": lokasi_lama.strip(),
+                "Keterangan": (
+                    f"Kegiatan Lama/Sebelumnya. {keterangan_lama.strip()}"
+                ).strip(),
+                "Username": pj_final,
+                "Tanggal Rencana Kerja": tgl_str,
+                "Tanggal Mulai Bekerja": tgl_str,
+                "Tanggal Selesai Kerja": tgl_str,
+                "Rencana Tenaga Kerja": 0,
+                "Rencana Alat Berat": "-",
+                "Rencana Operator": "-",
+                "Actual Tenaga Kerja": 0,
+                "Actual Alat Berat": "-",
+                "Actual Operator": "-",
+                "Rencana Produktivitas": luas_lama,
+                "Actual Produktivitas": luas_lama,
+                "Produktivitas Sampai Hari ini": luas_lama,
+                "Sisa luas belum dikerjakan": 0.0,
+                "Rincian": "Complete - Kegiatan Lama Telah Selesai",
+            }])
+
+            updated_df = pd.concat([df, new_row], ignore_index=True)
+            safe_gsheets_update("Sheet1", updated_df)
+            st.success(
+                f"Kegiatan lama untuk ID Petak '{id_petak_lama}' berhasil dicatat"
+                " sebagai selesai."
+            )
+            st.rerun()
+
   st.markdown("### Daftar ID Petak Terdaftar")
   if not df.empty:
     st.dataframe(
@@ -811,7 +967,6 @@ elif active_menu == "Rencana Kerja":
                 else status_kerja
             )
 
-            # Realisasi yang diinput akan otomatis dianggap final dan tersimpan ke base data sheet (Sheet1)
             df.loc[idx, "Actual Tenaga Kerja"] = actual_tk
             df.loc[idx, "Actual Alat Berat"] = (
                 actual_alat.strip() if actual_alat.strip() else "-"
@@ -824,7 +979,6 @@ elif active_menu == "Rencana Kerja":
             df.loc[idx, "Sisa luas belum dikerjakan"] = sisa_luas
             df.loc[idx, "Rincian"] = final_rincian
 
-            # Tanggal Selesai Kerja terisi otomatis dan terkunci jika sisa luas = 0
             if sisa_luas <= 0:
               df.loc[idx, "Tanggal Selesai Kerja"] = str(datetime.date.today())
             else:
@@ -833,7 +987,7 @@ elif active_menu == "Rencana Kerja":
             safe_gsheets_update(
                 "Sheet1", df.drop(columns=["Combo_Key"], errors="ignore")
             )
-            st.success("Realisasi kerja berhasil diperbarui dan disimpan sebagai nilai final pada base data sheet.")
+            st.success("Realisasi kerja berhasil diperbarui dan disimpan.")
             st.rerun()
 
     st.markdown("### Rekapitulasi Rencana & Realisasi Kerja")
@@ -907,7 +1061,6 @@ elif active_menu == "Monitoring":
       for petak in unique_petaks:
         petak_rows = df[df["ID Petak"].astype(str).str.strip().str.upper() == str(petak).strip().upper()]
 
-        # Cari tanggal selesai Tanam atau Tanam & Aquasorb yang sudah selesai (sisa luas <= 0 atau complete)
         tanam_completed = petak_rows[
             petak_rows["Jenis Kegiatan"].isin(["Established - Tanam", "Established - Tanam & Aquasorb"]) &
             ((petak_rows["Sisa luas belum dikerjakan"] <= 0) | (petak_rows["Rincian"].str.contains("Complete", case=False, na=False)))
@@ -916,7 +1069,6 @@ elif active_menu == "Monitoring":
         if tanam_completed.empty:
           continue
 
-        # Ambil tanggal selesai kerja tertua/terbaru dari kegiatan tanam tersebut
         t_selesai_str = str(tanam_completed.iloc[0]["Tanggal Selesai Kerja"])
         try:
           t_selesai_date = datetime.datetime.strptime(t_selesai_str, "%Y-%m-%d").date()
@@ -926,17 +1078,14 @@ elif active_menu == "Monitoring":
         plant_age_days = (today - t_selesai_date).days
         plant_age_months = plant_age_days / 30.44
 
-        # Cek kegiatan apa saja yang sudah selesai pada petak ini (sisa luas <= 0)
         completed_activities = petak_rows[
             (petak_rows["Sisa luas belum dikerjakan"] <= 0) |
             (petak_rows["Rincian"].str.contains("Complete", case=False, na=False))
         ]["Jenis Kegiatan"].tolist()
 
-        # Tentukan kegiatan berikutnya berdasarkan jadwal umur
         next_activity_info = None
         for rule in SCHEDULE_RULES:
           act_name = rule["activity"]
-          # Jika kegiatan ini belum pernah diselesaikan pada petak tersebut
           if act_name not in completed_activities:
             target_date = t_selesai_date + datetime.timedelta(days=rule["days_offset"])
             next_activity_info = {
