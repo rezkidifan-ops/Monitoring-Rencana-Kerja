@@ -16,10 +16,10 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. TEMA DESAIN & CUSTOM CSS (TAMPILAN BERSIH TANPA IKON & TATA LETAK STABIL DI ANDROID)
+# 2. TEMA DESAIN & CUSTOM CSS (FONT INTER, LEBIH KECIL, BERSIH, PROFESIONAL)
 st.markdown(
     """<style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 header[data-testid="stHeader"],
 div[data-testid="stToolbar"],
@@ -33,7 +33,8 @@ footer,
 }
 
 html, body, [class*="css"] {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 13px !important;
 }
 
 .stApp {
@@ -41,10 +42,10 @@ html, body, [class*="css"] {
 }
 
 .main .block-container {
-    padding-top: 1rem !important;
+    padding-top: 0.8rem !important;
     padding-bottom: 2rem !important;
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
+    padding-left: 0.8rem !important;
+    padding-right: 0.8rem !important;
     max-width: 1200px;
 }
 
@@ -61,27 +62,29 @@ html, body, [class*="css"] {
     }
 }
 
-/* STYLING TOMBOL: BOLD & TEMA HIJAU MERAH */
+/* STYLING TOMBOL: BOLD, PROFESIONAL, UKURAN PAS */
 .stButton > button {
-    font-weight: 700 !important;
-    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 12.5px !important;
+    border-radius: 6px !important;
     border: 1px solid rgba(46, 90, 54, 0.2) !important;
+    padding: 0.35rem 0.7rem !important;
 }
 
 /* BANNER UTAMA */
 .intro-banner-eucalyptus {
     background: linear-gradient(135deg, #1B3B22 0%, #2E5A36 60%, #990000 100%);
     color: #FFFFFF;
-    padding: 1.2rem 1.5rem;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(46, 90, 54, 0.2);
-    margin-bottom: 1.2rem;
-    border-bottom: 4px solid #C8102E;
+    padding: 1rem 1.2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(46, 90, 54, 0.15);
+    margin-bottom: 1rem;
+    border-bottom: 3px solid #C8102E;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     box-sizing: border-box;
     width: 100%;
 }
@@ -95,20 +98,20 @@ html, body, [class*="css"] {
     display: inline-block;
     background: #C8102E;
     color: #FFFFFF !important;
-    font-weight: 800 !important;
-    font-size: 0.75rem !important;
-    padding: 0.25rem 0.7rem;
-    border-radius: 20px;
-    letter-spacing: 1px;
+    font-weight: 700 !important;
+    font-size: 0.65rem !important;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.3rem;
     white-space: nowrap;
 }
 
 .intro-banner-eucalyptus h1 {
     color: #FFFFFF !important;
-    font-size: 1.4rem !important;
-    font-weight: 800 !important;
+    font-size: 1.15rem !important;
+    font-weight: 700 !important;
     margin: 0 !important;
     line-height: 1.2;
     word-wrap: break-word;
@@ -116,18 +119,18 @@ html, body, [class*="css"] {
 
 .intro-banner-eucalyptus p {
     color: #F8F9FA !important;
-    margin: 0.4rem 0 0 0 !important;
-    font-size: 0.85rem;
-    font-weight: 500;
+    margin: 0.3rem 0 0 0 !important;
+    font-size: 0.78rem;
+    font-weight: 400;
     opacity: 0.95;
     word-break: break-word;
 }
 
 .eucalyptus-tree-svg {
-    width: 65px;
-    height: 65px;
+    width: 50px;
+    height: 50px;
     flex-shrink: 0;
-    filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.2));
+    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.2));
 }
 
 @keyframes slideInRight {
@@ -137,11 +140,21 @@ html, body, [class*="css"] {
 .alert-sidebar-panel {
     animation: slideInRight 0.3s ease-out;
     background-color: #1e1e1e;
-    padding: 20px;
-    border-radius: 10px;
+    padding: 15px;
+    border-radius: 8px;
     border-left: 4px solid #C8102E;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     color: white;
+}
+
+/* KECILKAN UKURAN FONT HEADER STREAMLIT */
+h2 {
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
+}
+h3 {
+    font-size: 1rem !important;
+    font-weight: 600 !important;
 }
 </style>""",
     unsafe_allow_html=True,
@@ -423,8 +436,8 @@ st.markdown(
 <div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
 <h1>Eucasystem Monitoring</h1>
 <p>DISTRIK PULAU PUSAT</p>
-<hr style="border-color: rgba(255,255,255,0.2); margin: 6px 0;">
-<p style="font-size: 13px;">{st.session_state['user_pj']} | {role_badge}</p>
+<hr style="border-color: rgba(255,255,255,0.2); margin: 4px 0;">
+<p style="font-size: 11.5px;">{st.session_state['user_pj']} | {role_badge}</p>
 </div>
 {EUCALYPTUS_SVG}
 </div>""",
@@ -437,7 +450,7 @@ if st.session_state["show_alert_sidebar"]:
       """
         <div class="alert-sidebar-panel">
             <h3>🚨 Alert: Petak Belum Memiliki SPK</h3>
-            <p style="font-size: 13px; color: #ccc;">Daftar ID Petak yang sudah terisi kegiatan/produktivitas namun nomor SPK-nya masih kosong:</p>
+            <p style="font-size: 12px; color: #ccc;">Daftar ID Petak yang sudah terisi kegiatan/produktivitas namun nomor SPK-nya masih kosong:</p>
         </div>
     """,
       unsafe_allow_html=True,
