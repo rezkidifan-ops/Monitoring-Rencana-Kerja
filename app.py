@@ -193,7 +193,9 @@ USER_COLUMNS = ["Username", "Password", "Role"]
 
 def safe_gsheets_update(worksheet_name, data_df):
   try:
-    conn.update(worksheet=worksheet_name, data=data_df)
+    conn.update(
+        spreadsheet=SPREADSHEET_URL, worksheet=worksheet_name, data=data_df
+    )
     return True
   except Exception as e:
     if "Response [200]" in str(e):
@@ -214,6 +216,17 @@ def load_data():
     for col in COLUMNS:
       if col not in df.columns:
         df[col] = None
+
+    # Bersihkan format SPK agar tidak ada trailing .0
+    if "SPK" in df.columns:
+      df["SPK"] = (
+          df["SPK"]
+          .astype(str)
+          .str.replace(r"\.0$", "", regex=True)
+          .str.strip()
+      )
+      df["SPK"] = df["SPK"].replace(["nan", "None", ""], "-")
+
     return df[COLUMNS]
   except Exception as e:
     return pd.DataFrame(columns=COLUMNS)
@@ -679,7 +692,8 @@ if active_menu == "Input ID Petak":
               df.loc[idx, "SPK"] = new_spk_input.strip()
 
               safe_gsheets_update(
-                  "Sheet1", df.drop(columns=["Combo_Key_SPK"])
+                  "Sheet1",
+                  df.drop(columns=["Combo_Key_SPK"], errors="ignore"),
               )
               st.success(
                   "Nomor SPK berhasil diperbarui ke Google Sheets untuk petak"
@@ -726,9 +740,6 @@ elif active_menu == "Rencana Kerja":
             "Pilih Petak & Jenis Kegiatan (Rencana)", list_combo
         )
 
-        row_matched = df[df["Combo_Key"] == selected_combo_r].iloc[0]
-        st.info(f"Nomor SPK (Read-only): **{row_matched['SPK']}**")
-
         col_rk1, col_rk2 = st.columns(2)
         with col_rk1:
           tgl_rencana = st.date_input(
@@ -766,7 +777,9 @@ elif active_menu == "Rencana Kerja":
             df.loc[idx, "Rencana Tenaga Kerja"] = rencana_tk
             df.loc[idx, "Rencana Produktivitas"] = rencana_prod
 
-            safe_gsheets_update("Sheet1", df.drop(columns=["Combo_Key"]))
+            safe_gsheets_update(
+                "Sheet1", df.drop(columns=["Combo_Key"], errors="ignore")
+            )
             st.success("Rencana kerja berhasil disimpan.")
             st.rerun()
 
@@ -775,9 +788,6 @@ elif active_menu == "Rencana Kerja":
         selected_combo_u = st.selectbox(
             "Pilih Petak & Jenis Kegiatan (Realisasi)", list_combo
         )
-
-        row_matched_u = df[df["Combo_Key"] == selected_combo_u].iloc[0]
-        st.info(f"Nomor SPK (Read-only): **{row_matched_u['SPK']}**")
 
         col_rl1, col_rl2 = st.columns(2)
         with col_rl1:
@@ -831,7 +841,9 @@ elif active_menu == "Rencana Kerja":
             df.loc[idx, "Sisa luas belum dikerjakan"] = sisa_luas
             df.loc[idx, "Rincian"] = final_rincian
 
-            safe_gsheets_update("Sheet1", df.drop(columns=["Combo_Key"]))
+            safe_gsheets_update(
+                "Sheet1", df.drop(columns=["Combo_Key"], errors="ignore")
+            )
             st.success("Realisasi kerja berhasil diperbarui.")
             st.rerun()
 
