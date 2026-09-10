@@ -32,7 +32,6 @@ footer,
     height: 0px !important;
 }
 
-/* HILANGKAN TEKS PANDUAN SUBMIT (PRESS ENTER / CTRL+ENTER) */
 [data-testid="InputInstructions"] {
     display: none !important;
 }
@@ -54,7 +53,6 @@ html, body, [class*="css"] {
     max-width: 1200px;
 }
 
-/* PAKSA TOMBOL UTAMA TETAP SEJAJAR DI MOBILE */
 @media (max-width: 640px) {
     div[data-testid="stHorizontalBlock"] {
         flex-direction: row !important;
@@ -67,7 +65,6 @@ html, body, [class*="css"] {
     }
 }
 
-/* STYLING TOMBOL: BOLD, PROFESIONAL, UKURAN PAS */
 .stButton > button {
     font-weight: 600 !important;
     font-size: 12.5px !important;
@@ -76,7 +73,6 @@ html, body, [class*="css"] {
     padding: 0.35rem 0.7rem !important;
 }
 
-/* BANNER UTAMA */
 .intro-banner-eucalyptus {
     background: linear-gradient(135deg, #1B3B22 0%, #2E5A36 60%, #990000 100%);
     color: #FFFFFF;
@@ -194,6 +190,21 @@ COLUMNS = [
 
 USER_COLUMNS = ["Username", "Password", "Role"]
 
+SCHEDULE_RULES = [
+    {"activity": "Pupuk", "days_offset": 3, "label": "Umur 0-7 hari"},
+    {"activity": "Sulam", "days_offset": 3, "label": "Umur 0-7 hari"},
+    {"activity": "Manual Weeding 1", "days_offset": 30, "label": "Umur 1 bulan (Optional)"},
+    {"activity": "Chemical Weeding 1", "days_offset": 45, "label": "Umur 1-2 bulan"},
+    {"activity": "Pupuk Susulan 1", "days_offset": 90, "label": "Umur 3 bulan"},
+    {"activity": "Chemical Weeding 2", "days_offset": 135, "label": "Umur 4-5 bulan"},
+    {"activity": "Chemical Weeding 3", "days_offset": 225, "label": "Umur 7-8 bulan"},
+    {"activity": "Pupuk Susulan 2", "days_offset": 270, "label": "Umur 9 bulan"},
+    {"activity": "Chemical Weeding 4", "days_offset": 345, "label": "Umur 11-12 bulan"},
+    {"activity": "Chemical Weeding 5", "days_offset": 465, "label": "Umur 15-16 bulan"},
+    {"activity": "Chemical Weeding 6", "days_offset": 615, "label": "Umur 20-21 bulan"},
+    {"activity": "Chemical Weeding 7", "days_offset": 810, "label": "Umur 26-28 bulan"},
+]
+
 
 def safe_gsheets_update(worksheet_name, data_df):
   try:
@@ -221,7 +232,6 @@ def load_data():
       if col not in df.columns:
         df[col] = None
 
-    # Bersihkan format SPK agar tidak ada trailing .0
     if "SPK" in df.columns:
       df["SPK"] = (
           df["SPK"]
@@ -341,19 +351,12 @@ if not st.session_state["logged_in"]:
             else:
               st.error("Username atau Password tidak valid.")
           else:
-            st.error(
-                "Data pengguna tidak ditemukan. Silakan lakukan pendaftaran"
-                " akun."
-            )
+            st.error("Data pengguna tidak ditemukan.")
 
   with tab_register:
     with st.form("form_register"):
-      reg_pj = st.text_input(
-          "Username", placeholder="Contoh: Rezki Difan Arshaf"
-      )
-      reg_kode = st.text_input(
-          "Password", type="password", placeholder="Minimal 4 karakter"
-      )
+      reg_pj = st.text_input("Username", placeholder="Contoh: Rezki Difan Arshaf")
+      reg_kode = st.text_input("Password", type="password", placeholder="Minimal 4 karakter")
       btn_reg = st.form_submit_button("Daftar Akun", use_container_width=True)
 
       if btn_reg:
@@ -366,10 +369,7 @@ if not st.session_state["logged_in"]:
                 df_users["Username"].str.upper() == reg_pj.strip().upper()
             ]
             if not exists.empty:
-              st.error(
-                  f"Username '{reg_pj}' sudah terdaftar. Silakan gunakan menu"
-                  " Login."
-              )
+              st.error(f"Username '{reg_pj}' sudah terdaftar.")
               st.stop()
 
           new_user = pd.DataFrame([{
@@ -380,14 +380,14 @@ if not st.session_state["logged_in"]:
           updated_users = pd.concat([df_users, new_user], ignore_index=True)
           try:
             safe_gsheets_update("Users", updated_users)
-            st.success("Pendaftaran berhasil! Silakan pindah ke tab Login.")
+            st.success("Pendaftaran berhasil! Silakan login.")
           except Exception as e:
             st.error(f"Gagal menyimpan data pengguna: {e}")
 
   st.stop()
 
 # =========================================================
-# DASHBOARD & OPERASIONAL UTAMA (SETELAH LOGIN)
+# DASHBOARD & OPERASIONAL UTAMA
 # =========================================================
 st.markdown(
     """<style>
@@ -408,7 +408,6 @@ is_admin = (
 )
 role_badge = "Administrator" if is_admin else "Field Officer"
 
-# Hitung jumlah Alert SPK Kosong
 alert_count = 0
 if not df.empty:
   spk_series = df["SPK"].astype(str).str.strip()
@@ -426,14 +425,11 @@ if not df.empty:
   )
   alert_count = len(df[has_prod & empty_spk])
 
-# Tombol Alert & Keluar di Paling Atas Kanan
 col_spacer, col_alert, col_logout = st.columns([5.6, 2.2, 2.2])
 
 with col_alert:
   alert_btn_label = f"Alert ({alert_count})" if alert_count > 0 else "Alert"
-  if st.button(
-      alert_btn_label, use_container_width=True, help="Alert Petak Belum Ada SPK"
-  ):
+  if st.button(alert_btn_label, use_container_width=True):
     st.session_state["show_alert_sidebar"] = not st.session_state[
         "show_alert_sidebar"
     ]
@@ -448,7 +444,6 @@ with col_logout:
 
 st.write("")
 
-# Banner Utama
 st.markdown(
     f"""<div class="intro-banner-eucalyptus">
 <div class="banner-content">
@@ -463,7 +458,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Panel Sidebar Alert
 if st.session_state["show_alert_sidebar"]:
   st.markdown(
       """
@@ -500,9 +494,6 @@ if st.session_state["show_alert_sidebar"]:
     st.rerun()
   st.markdown("---")
 
-# =========================================================
-# NAVIGASI MENU UTAMA
-# =========================================================
 b_col1, b_col2, b_col3 = st.columns(3)
 
 with b_col1:
@@ -525,16 +516,13 @@ st.write("")
 active_menu = st.session_state["active_menu"]
 
 # =========================================================
-# KONTEN 1: INPUT ID PETAK & UPDATE SPK TERPISAH
+# KONTEN 1: INPUT ID PETAK
 # =========================================================
 if active_menu == "Input ID Petak":
   sub_tab_reg, sub_tab_spk = st.tabs(
       ["Formulir Pendaftaran ID Petak", "Update Nomor SPK"]
   )
 
-  # ------------------------------------------------_
-  # SUB-TAB 1: PENDAFTARAN ID PETAK (SPK TIDAK WAJIB)
-  # ------------------------------------------------_
   with sub_tab_reg:
     st.subheader("Formulir Pendaftaran ID Petak")
 
@@ -542,10 +530,10 @@ if active_menu == "Input ID Petak":
       col_f1, col_f2 = st.columns(2)
 
       with col_f1:
-        id_petak = st.text_input("ID Petak", placeholder="Contoh: EUC-A01")
+        id_petak = st.text_input("ID Petak", placeholder="Contoh: URUC031305")
         spk_input = st.text_input(
-            "Nomor SPK (Opsional / Bisa diupdate nanti)",
-            placeholder="Contoh: SPK/EUC/2026/001",
+            "Nomor SPK (Opsional)",
+            placeholder="Contoh: 23542638253",
         )
         jenis_kegiatan = st.selectbox(
             "Jenis Kegiatan",
@@ -560,6 +548,18 @@ if active_menu == "Input ID Petak":
                 "Established - Sulam",
                 "Established - PPS",
                 "Established - PPS Dron",
+                "Pupuk",
+                "Sulam",
+                "Manual Weeding 1",
+                "Chemical Weeding 1",
+                "Chemical Weeding 2",
+                "Chemical Weeding 3",
+                "Chemical Weeding 4",
+                "Chemical Weeding 5",
+                "Chemical Weeding 6",
+                "Chemical Weeding 7",
+                "Pupuk Susulan 1",
+                "Pupuk Susulan 2",
                 "Maintenance - MW 1",
                 "Maintenance - CW 1",
                 "Maintenance - CW 2",
@@ -582,9 +582,7 @@ if active_menu == "Input ID Petak":
         luas = st.number_input("Luas Area (Ha)", min_value=0.0, step=0.1)
 
       with col_f2:
-        lokasi = st.text_input(
-            "Lokasi / Wilayah", placeholder="Contoh: Sektor Utara"
-        )
+        lokasi = st.text_input("Lokasi / Wilayah", placeholder="Contoh: Sektor Utara")
         keterangan = st.text_area("Keterangan Tambahan", height=135)
 
       submitted_petak = st.form_submit_button(
@@ -613,8 +611,7 @@ if active_menu == "Input ID Petak":
           if is_duplicate:
             st.error(
                 f"Data untuk ID Petak '{id_petak.strip()}' dengan Jenis"
-                f" Kegiatan '{jenis_kegiatan}' sudah tersedia. Mohon gunakan"
-                " jenis kegiatan yang berbeda."
+                f" Kegiatan '{jenis_kegiatan}' sudah tersedia."
             )
           else:
             pj_final = st.session_state["user_pj"]
@@ -632,7 +629,7 @@ if active_menu == "Input ID Petak":
                 "Username": pj_final,
                 "Tanggal Rencana Kerja": str(datetime.date.today()),
                 "Tanggal Mulai Bekerja": str(datetime.date.today()),
-                "Tanggal Selesai Kerja": str(datetime.date.today()),
+                "Tanggal Selesai Kerja": "-",
                 "Rencana Tenaga Kerja": 0,
                 "Rencana Alat Berat": "-",
                 "Rencana Operator": "-",
@@ -648,31 +645,20 @@ if active_menu == "Input ID Petak":
 
             updated_df = pd.concat([df, new_row], ignore_index=True)
             safe_gsheets_update("Sheet1", updated_df)
-            st.success(
-                f"ID Petak '{id_petak}' dengan kegiatan '{jenis_kegiatan}'"
-                " berhasil didaftarkan."
-            )
+            st.success(f"ID Petak '{id_petak}' berhasil didaftarkan.")
             st.rerun()
 
-  # ------------------------------------------------_
-  # SUB-TAB 2: UPDATE NOMOR SPK BERDASARKAN ID PETAK & JENIS KEGIATAN
-  # ------------------------------------------------_
   with sub_tab_spk:
     st.subheader("Pembaruan Nomor SPK")
-    st.write(
-        "Pilih ID Petak dan Jenis Kegiatan yang sudah terdaftar untuk"
-        " memperbarui nomor SPK."
-    )
-
     if df.empty:
-      st.info("Belum ada data petak yang terdaftar di database.")
+      st.info("Belum ada data petak yang terdaftar.")
     else:
       df["Combo_Key_SPK"] = (
           "ID: "
           + df["ID Petak"].astype(str)
           + " | Kegiatan: "
           + df["Jenis Kegiatan"].astype(str)
-          + " (SPK Saat Ini: "
+          + " (SPK: "
           + df["SPK"].astype(str)
           + ")"
       )
@@ -682,9 +668,7 @@ if active_menu == "Input ID Petak":
         selected_combo_spk = st.selectbox(
             "Pilih Petak & Jenis Kegiatan", list_combo_spk
         )
-        new_spk_input = st.text_input(
-            "Nomor SPK Baru", placeholder="Contoh: SPK/EUC/2026/001"
-        )
+        new_spk_input = st.text_input("Nomor SPK Baru")
 
         submit_update_spk = st.form_submit_button(
             "Simpan Pembaruan SPK", use_container_width=True
@@ -698,15 +682,11 @@ if active_menu == "Input ID Petak":
             if not matched_idx.empty:
               idx = matched_idx[0]
               df.loc[idx, "SPK"] = new_spk_input.strip()
-
               safe_gsheets_update(
                   "Sheet1",
                   df.drop(columns=["Combo_Key_SPK"], errors="ignore"),
               )
-              st.success(
-                  "Nomor SPK berhasil diperbarui ke Google Sheets untuk petak"
-                  " dan jenis kegiatan tersebut."
-              )
+              st.success("Nomor SPK berhasil diperbarui.")
               st.rerun()
 
   st.markdown("### Daftar ID Petak Terdaftar")
@@ -720,15 +700,13 @@ if active_menu == "Input ID Petak":
     st.info("Belum ada data petak yang terdaftar.")
 
 # =========================================================
-# KONTEN 2: RENCANA KERJA (BUAT RENCANA & UPDATE REALISASI)
+# KONTEN 2: RENCANA KERJA
 # =========================================================
 elif active_menu == "Rencana Kerja":
   st.subheader("Rencana Kerja & Realisasi Operasional")
 
   if df.empty:
-    st.warning(
-        "Silakan daftarkan ID Petak terlebih dahulu pada menu 'Input ID Petak'."
-    )
+    st.warning("Silakan daftarkan ID Petak terlebih dahulu.")
   else:
     df["Combo_Key"] = (
         "ID: "
@@ -750,28 +728,13 @@ elif active_menu == "Rencana Kerja":
 
         col_rk1, col_rk2 = st.columns(2)
         with col_rk1:
-          tgl_rencana = st.date_input(
-              "Tanggal Rencana Kerja", value=datetime.date.today()
-          )
-          tgl_mulai = st.date_input(
-              "Tanggal Mulai Bekerja", value=datetime.date.today()
-          )
-          tgl_selesai = st.date_input(
-              "Tanggal Selesai Kerja", value=datetime.date.today()
-          )
-          rencana_tk = st.number_input(
-              "Rencana Tenaga Kerja (Orang)", min_value=0, step=1
-          )
+          tgl_rencana = st.date_input("Tanggal Rencana Kerja", value=datetime.date.today())
+          tgl_mulai = st.date_input("Tanggal Mulai Bekerja", value=datetime.date.today())
+          rencana_tk = st.number_input("Rencana Tenaga Kerja (Orang)", min_value=0, step=1)
         with col_rk2:
-          rencana_alat = st.text_input(
-              "Rencana Jenis Alat Berat", placeholder="Contoh: Excavator / -"
-          )
-          rencana_operator = st.text_input(
-              "Rencana Operator", placeholder="Nama Operator / -"
-          )
-          rencana_prod = st.number_input(
-              "Rencana Produktivitas (Ha)", min_value=0.0, step=0.1
-          )
+          rencana_alat = st.text_input("Rencana Jenis Alat Berat", placeholder="Contoh: Excavator / -")
+          rencana_operator = st.text_input("Rencana Operator", placeholder="Nama Operator / -")
+          rencana_prod = st.number_input("Rencana Produktivitas (Ha)", min_value=0.0, step=0.1)
 
         submit_rencana_btn = st.form_submit_button(
             "Simpan Rencana Kerja", use_container_width=True
@@ -781,13 +744,8 @@ elif active_menu == "Rencana Kerja":
           matched_idx = df[df["Combo_Key"] == selected_combo_r].index
           if not matched_idx.empty:
             idx = matched_idx[0]
-            df.loc[idx, "Tanggal Rencana Kerja"] = tgl_rencana.strftime(
-                "%Y-%m-%d"
-            )
+            df.loc[idx, "Tanggal Rencana Kerja"] = tgl_rencana.strftime("%Y-%m-%d")
             df.loc[idx, "Tanggal Mulai Bekerja"] = tgl_mulai.strftime("%Y-%m-%d")
-            df.loc[idx, "Tanggal Selesai Kerja"] = tgl_selesai.strftime(
-                "%Y-%m-%d"
-            )
             df.loc[idx, "Rencana Tenaga Kerja"] = rencana_tk
             df.loc[idx, "Rencana Alat Berat"] = (
                 rencana_alat.strip() if rencana_alat.strip() else "-"
@@ -811,19 +769,11 @@ elif active_menu == "Rencana Kerja":
 
         col_rl1, col_rl2 = st.columns(2)
         with col_rl1:
-          actual_tk = st.number_input(
-              "Aktual Tenaga Kerja (Orang)", min_value=0, step=1
-          )
-          actual_alat = st.text_input(
-              "Aktual Jenis Alat Berat", placeholder="Contoh: Excavator / -"
-          )
-          actual_operator = st.text_input(
-              "Aktual Operator", placeholder="Nama Operator / -"
-          )
+          actual_tk = st.number_input("Aktual Tenaga Kerja (Orang)", min_value=0, step=1)
+          actual_alat = st.text_input("Aktual Jenis Alat Berat", placeholder="Contoh: Excavator / -")
+          actual_operator = st.text_input("Aktual Operator", placeholder="Nama Operator / -")
         with col_rl2:
-          actual_prod = st.number_input(
-              "Aktual Produktivitas (Ha)", min_value=0.0, step=0.1
-          )
+          actual_prod = st.number_input("Aktual Produktivitas (Ha)", min_value=0.0, step=0.1)
           rincian_input = st.text_area("Catatan Operasional / Rincian", height=95)
 
         submit_realisasi_btn = st.form_submit_button(
@@ -873,6 +823,12 @@ elif active_menu == "Rencana Kerja":
             df.loc[idx, "Sisa luas belum dikerjakan"] = sisa_luas
             df.loc[idx, "Rincian"] = final_rincian
 
+            # Tanggal Selesai Kerja terisi otomatis dan terkunci jika sisa luas = 0
+            if sisa_luas <= 0:
+              df.loc[idx, "Tanggal Selesai Kerja"] = str(datetime.date.today())
+            else:
+              df.loc[idx, "Tanggal Selesai Kerja"] = "-"
+
             safe_gsheets_update(
                 "Sheet1", df.drop(columns=["Combo_Key"], errors="ignore")
             )
@@ -882,30 +838,17 @@ elif active_menu == "Rencana Kerja":
     st.markdown("### Rekapitulasi Rencana & Realisasi Kerja")
     if not df.empty:
       df_display = df.copy()
-      df_display["Bulan"] = (
-          pd.to_datetime(df_display["Tanggal Rencana Kerja"], errors="coerce")
-          .dt.to_period("M")
-          .astype(str)
-      )
-      df_display["Hari"] = pd.to_datetime(
-          df_display["Tanggal Rencana Kerja"], errors="coerce"
-      ).dt.day
-
       st.dataframe(
           df_display[[
-              "Bulan",
-              "Hari",
               "ID Petak",
               "SPK",
               "Jenis Kegiatan",
-              "Rencana Tenaga Kerja",
-              "Rencana Alat Berat",
-              "Rencana Operator",
-              "Actual Tenaga Kerja",
-              "Actual Alat Berat",
-              "Actual Operator",
+              "Tanggal Rencana Kerja",
+              "Tanggal Mulai Bekerja",
+              "Tanggal Selesai Kerja",
               "Rencana Produktivitas",
               "Actual Produktivitas",
+              "Sisa luas belum dikerjakan",
               "Rincian",
           ]],
           use_container_width=True,
@@ -913,11 +856,11 @@ elif active_menu == "Rencana Kerja":
       )
 
 # =========================================================
-# KONTEN 3: MONITORING
+# KONTEN 3: MONITORING & KALKULASI REMINDER KEGIATAN
 # =========================================================
 elif active_menu == "Monitoring":
   st.subheader("Monitoring")
-  st.write("Pemantauan kegiatan dan nomor SPK terdaftar.")
+  st.write("Pemantauan kegiatan, nomor SPK terdaftar, serta kalkulasi pengingat (reminder) kegiatan selanjutnya secara real-time.")
 
   if df.empty:
     st.info("Belum terdapat data kegiatan.")
@@ -931,17 +874,91 @@ elif active_menu == "Monitoring":
     if user_df.empty:
       st.info("Belum ada data kegiatan untuk akun Anda.")
     else:
+      st.markdown("### 📋 Daftar Kegiatan Terdaftar")
       st.dataframe(
           user_df[[
               "ID Petak",
               "SPK",
               "Jenis Kegiatan",
               "Lokasi",
-              "Tanggal Rencana Kerja",
-              "Rencana Alat Berat",
-              "Rencana Operator",
-              "Keterangan",
+              "Tanggal Selesai Kerja",
+              "Sisa luas belum dikerjakan",
+              "Rincian",
           ]],
           use_container_width=True,
           hide_index=True,
       )
+
+      st.markdown("---")
+      st.markdown("### 🔔 Kalkulator Reminder Kegiatan Selanjutnya")
+      st.write("Dihitung secara real-time berdasarkan tanggal selesai kegiatan Tanam / Tanam & Aquasorb yang telah selesai (`Sisa Luas = 0`).")
+
+      unique_petaks = user_df["ID Petak"].dropna().unique()
+      reminder_list = []
+
+      today = datetime.date.today()
+
+      for petak in unique_petaks:
+        petak_rows = df[df["ID Petak"].astype(str).str.strip().str.upper() == str(petak).strip().upper()]
+
+        # Cari tanggal selesai Tanam atau Tanam & Aquasorb yang sudah selesai (sisa luas <= 0 atau complete)
+        tanam_completed = petak_rows[
+            petak_rows["Jenis Kegiatan"].isin(["Established - Tanam", "Established - Tanam & Aquasorb"]) &
+            ((petak_rows["Sisa luas belum dikerjakan"] <= 0) | (petak_rows["Rincian"].str.contains("Complete", case=False, na=False)))
+        ]
+
+        if tanam_completed.empty:
+          continue
+
+        # Ambil tanggal selesai kerja tertua/terbaru dari kegiatan tanam tersebut
+        t_selesai_str = str(tanam_completed.iloc[0]["Tanggal Selesai Kerja"])
+        try:
+          t_selesai_date = datetime.datetime.strptime(t_selesai_str, "%Y-%m-%d").date()
+        except ValueError:
+          continue
+
+        plant_age_days = (today - t_selesai_date).days
+        plant_age_months = plant_age_days / 30.44
+
+        # Cek kegiatan apa saja yang sudah selesai pada petak ini (sisa luas <= 0)
+        completed_activities = petak_rows[
+            (petak_rows["Sisa luas belum dikerjakan"] <= 0) |
+            (petak_rows["Rincian"].str.contains("Complete", case=False, na=False))
+        ]["Jenis Kegiatan"].tolist()
+
+        # Tentukan kegiatan berikutnya berdasarkan jadwal umur
+        next_activity_info = None
+        for rule in SCHEDULE_RULES:
+          act_name = rule["activity"]
+          # Jika kegiatan ini belum pernah diselesaikan pada petak tersebut
+          if act_name not in completed_activities:
+            target_date = t_selesai_date + datetime.timedelta(days=rule["days_offset"])
+            next_activity_info = {
+                "ID Petak": petak,
+                "Tanggal Selesai Tanam": t_selesai_str,
+                "Umur Tanaman": f"{plant_age_days} Hari (~{round(plant_age_months, 1)} Bulan)",
+                "Kegiatan Selanjutnya": act_name,
+                "Kategori Umur": rule["label"],
+                "Estimasi Tanggal": target_date.strftime("%Y-%m-%d"),
+                "Status Waktu": "Jadwal Tiba" if today >= target_date else "Akan Datang"
+            }
+            break
+
+        if next_activity_info:
+          reminder_list.append(next_activity_info)
+        else:
+          reminder_list.append({
+              "ID Petak": petak,
+              "Tanggal Selesai Tanam": t_selesai_str,
+              "Umur Tanaman": f"{plant_age_days} Hari (~{round(plant_age_months, 1)} Bulan)",
+              "Kegiatan Selanjutnya": "Semua Kegiatan Selesai / Siklus Terpenuhi",
+              "Kategori Umur": "-",
+              "Estimasi Tanggal": "-",
+              "Status Waktu": "Selesai"
+          })
+
+      if reminder_list:
+        df_reminder = pd.DataFrame(reminder_list)
+        st.dataframe(df_reminder, use_container_width=True, hide_index=True)
+      else:
+        st.info("Belum ada petak dengan kegiatan Tanam yang berstatus selesai (`Sisa Luas = 0`). Selesaikan kegiatan Tanam terlebih dahulu untuk melihat reminder kegiatan berikutnya.")
