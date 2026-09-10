@@ -8,7 +8,7 @@ from streamlit_gsheets import GSheetsConnection
 # =========================================================
 SPREADSHEET_URL = "https://docs.google.com/spreadsheets/d/1qJMHdTkURQV7LQE_DfO3UiX_txepHVCXqRct3mrQlxs/edit?usp=drivesdk"
 
-# 1. PENGATURAN HALAMAN (Memaksa layout desktop)
+# 1. PENGATURAN HALAMAN
 st.set_page_config(
     page_title="Eucasystem Monitoring",
     page_icon="🌲",
@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. TEMA DESAIN & CUSTOM CSS (RESPONSIF ANDROID & DESKTOP)
+# 2. TEMA DESAIN & CUSTOM CSS (MENCEGAH KOLOM MENUMPUK DI ANDROID)
 st.markdown(
     """<style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -46,6 +46,19 @@ html, body, [class*="css"] {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
     max-width: 1200px;
+}
+
+/* ================= PAKSA KOLOM TETAP SEJAJAR DI MOBILE ================= */
+@media (max-width: 640px) {
+    div[data-testid="stHorizontalBlock"] {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+    div[data-testid="stColumn"] {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
 }
 
 /* ================= BANNER UTAMA RESPONSIF ================= */
@@ -356,7 +369,7 @@ is_admin = (
 )
 role_badge = "Administrator" if is_admin else "Field Officer"
 
-# Hitung jumlah Alert SPK Kosong (Sudah ada produktivitas atau jenis kegiatan tetapi SPK kosong)
+# Hitung jumlah Alert SPK Kosong
 alert_count = 0
 if not df.empty:
   spk_series = df["SPK"].astype(str).str.strip()
@@ -374,8 +387,10 @@ if not df.empty:
   )
   alert_count = len(df[has_prod & empty_spk])
 
-# Top Bar: Banner, Tombol Lonceng Alert, dan Tombol Keluar
-col_banner, col_alert, col_logout = st.columns([7.8, 1.1, 1.1], vertical_alignment="center")
+# Top Bar: Banner, Tombol Lonceng Alert, dan Tombol Keluar (Sejajar)
+col_banner, col_alert, col_logout = st.columns(
+    [7.8, 1.1, 1.1], vertical_alignment="center"
+)
 
 with col_banner:
   st.markdown(
@@ -393,7 +408,9 @@ with col_banner:
 
 with col_alert:
   bell_label = f"🔔 {alert_count}" if alert_count > 0 else "🔔"
-  if st.button(bell_label, use_container_width=True, help="Alert Petak Belum Ada SPK"):
+  if st.button(
+      bell_label, use_container_width=True, help="Alert Petak Belum Ada SPK"
+  ):
     st.session_state["show_alert_sidebar"] = not st.session_state[
         "show_alert_sidebar"
     ]
@@ -408,7 +425,7 @@ with col_logout:
 
 st.write("")
 
-# Panel Sidebar Alert (Kanan ke Kiri)
+# Panel Sidebar Alert
 if st.session_state["show_alert_sidebar"]:
   st.markdown(
       """
@@ -434,9 +451,12 @@ if st.session_state["show_alert_sidebar"]:
     alert_df = df[has_prod & empty_spk]
     if not alert_df.empty:
       st.dataframe(
-          alert_df[
-              ["ID Petak", "Jenis Kegiatan", "Tanggal Rencana Kerja", "Actual Produktivitas"]
-          ],
+          alert_df[[
+              "ID Petak",
+              "Jenis Kegiatan",
+              "Tanggal Rencana Kerja",
+              "Actual Produktivitas",
+          ]],
           use_container_width=True,
           hide_index=True,
       )
@@ -451,7 +471,7 @@ if st.session_state["show_alert_sidebar"]:
   st.markdown("---")
 
 # =========================================================
-# NAVIGASI MENU UTAMA
+# NAVIGASI MENU UTAMA (SEJAJAR DALAM 1 BARIS)
 # =========================================================
 b_col1, b_col2, b_col3 = st.columns(3)
 
@@ -626,11 +646,15 @@ elif active_menu == "Rencana Kerja":
       )
 
       if submit_rencana:
-        # Cari baris yang sesuai dengan ID Petak terpilih
-        matched_idx = df[df["ID Petak"].astype(str).str.strip() == str(selected_petak).strip()].index
+        matched_idx = df[
+            df["ID Petak"].astype(str).str.strip()
+            == str(selected_petak).strip()
+        ].index
         if not matched_idx.empty:
           idx = matched_idx[0]
-          luas_petak = float(df.loc[idx, "Luas"] if pd.notna(df.loc[idx, "Luas"]) else 0.0)
+          luas_petak = float(
+              df.loc[idx, "Luas"] if pd.notna(df.loc[idx, "Luas"]) else 0.0
+          )
 
           prev_actual = pd.to_numeric(
               df.loc[idx, "Actual Produktivitas"], errors="coerce"
@@ -639,9 +663,13 @@ elif active_menu == "Rencana Kerja":
             prev_actual = 0.0
 
           prod_kumulatif = prev_actual + actual_prod
-          prod_hari_ini = min(prod_kumulatif, luas_petak if luas_petak > 0 else prod_kumulatif)
+          prod_hari_ini = min(
+              prod_kumulatif,
+              luas_petak if luas_petak > 0 else prod_kumulatif,
+          )
           sisa_luas = max(
-              0.0, (luas_petak - prod_hari_ini) if luas_petak > 0 else 0.0
+              0.0,
+              (luas_petak - prod_hari_ini) if luas_petak > 0 else 0.0,
           )
 
           status_kerja = "Complete" if sisa_luas <= 0 else "On Progres"
@@ -672,7 +700,7 @@ elif active_menu == "Rencana Kerja":
           )
           st.rerun()
 
-    st.markdown("### Rekapitulasi Rencana Kerja (Dikelompokkan per Hari & Akumulasi Bulanan)")
+    st.markdown("### Rekapitulasi Rencana Kerja")
     if not df.empty:
       df_display = df.copy()
       df_display["Bulan"] = (
