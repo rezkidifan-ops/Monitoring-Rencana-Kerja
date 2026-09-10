@@ -510,7 +510,7 @@ st.write("")
 active_menu = st.session_state["active_menu"]
 
 # =========================================================
-# KONTEN 1: INPUT ID PETAK (TEMPAT PENGISIAN NOMOR SPK)
+# KONTEN 1: INPUT ID PETAK (CEK DUPLIKASI ID PETAK + JENIS KEGIATAN)
 # =========================================================
 if active_menu == "Input ID Petak":
   st.subheader("Formulir Pendaftaran ID Petak & Nomor SPK")
@@ -571,37 +571,57 @@ if active_menu == "Input ID Petak":
             "ID Petak, Nomor SPK, dan Luas wajib diisi dengan benar."
         )
       else:
-        pj_final = st.session_state["user_pj"]
-        no_baru = len(df) + 1 if not df.empty else 1
+        # Pengecekan Duplikasi: ID Petak & Jenis Kegiatan sama ditolak
+        is_duplicate = False
+        if not df.empty:
+          matched_dup = df[
+              (
+                  df["ID Petak"].astype(str).str.strip().str.upper()
+                  == id_petak.strip().upper()
+              )
+              & (df["Jenis Kegiatan"].astype(str).str.strip() == jenis_kegiatan)
+          ]
+          if not matched_dup.empty:
+            is_duplicate = True
 
-        new_row = pd.DataFrame([{
-            "No": no_baru,
-            "ID Petak": id_petak.strip(),
-            "SPK": spk_input.strip(),
-            "Jenis Kegiatan": jenis_kegiatan,
-            "Luas": luas,
-            "Lokasi": lokasi.strip(),
-            "Keterangan": keterangan.strip(),
-            "Username": pj_final,
-            "Tanggal Rencana Kerja": str(datetime.date.today()),
-            "Tanggal Mulai Bekerja": str(datetime.date.today()),
-            "Tanggal Selesai Kerja": str(datetime.date.today()),
-            "Rencana Tenaga Kerja": 0,
-            "Actual Tenaga Kerja": 0,
-            "Rencana Produktivitas": 0.0,
-            "Actual Produktivitas": 0.0,
-            "Produktivitas Sampai Hari ini": 0.0,
-            "Sisa luas belum dikerjakan": luas,
-            "Rincian": "On Progres - Petak terdaftar",
-        }])
+        if is_duplicate:
+          st.error(
+              f"Data untuk ID Petak '{id_petak.strip()}' dengan Jenis"
+              f" Kegiatan '{jenis_kegiatan}' sudah tersedia. Mohon gunakan"
+              " jenis kegiatan yang berbeda."
+          )
+        else:
+          pj_final = st.session_state["user_pj"]
+          no_baru = len(df) + 1 if not df.empty else 1
 
-        updated_df = pd.concat([df, new_row], ignore_index=True)
-        safe_gsheets_update("Sheet1", updated_df)
-        st.success(
-            f"ID Petak '{id_petak}' dengan SPK '{spk_input}' berhasil"
-            " didaftarkan."
-        )
-        st.rerun()
+          new_row = pd.DataFrame([{
+              "No": no_baru,
+              "ID Petak": id_petak.strip(),
+              "SPK": spk_input.strip(),
+              "Jenis Kegiatan": jenis_kegiatan,
+              "Luas": luas,
+              "Lokasi": lokasi.strip(),
+              "Keterangan": keterangan.strip(),
+              "Username": pj_final,
+              "Tanggal Rencana Kerja": str(datetime.date.today()),
+              "Tanggal Mulai Bekerja": str(datetime.date.today()),
+              "Tanggal Selesai Kerja": str(datetime.date.today()),
+              "Rencana Tenaga Kerja": 0,
+              "Actual Tenaga Kerja": 0,
+              "Rencana Produktivitas": 0.0,
+              "Actual Produktivitas": 0.0,
+              "Produktivitas Sampai Hari ini": 0.0,
+              "Sisa luas belum dikerjakan": luas,
+              "Rincian": "On Progres - Petak terdaftar",
+          }])
+
+          updated_df = pd.concat([df, new_row], ignore_index=True)
+          safe_gsheets_update("Sheet1", updated_df)
+          st.success(
+              f"ID Petak '{id_petak}' dengan kegiatan '{jenis_kegiatan}' berhasil"
+              " didaftarkan."
+          )
+          st.rerun()
 
   st.markdown("### Daftar ID Petak Terdaftar")
   if not df.empty:
@@ -614,7 +634,7 @@ if active_menu == "Input ID Petak":
     st.info("Belum ada data petak yang terdaftar.")
 
 # =========================================================
-# KONTEN 2: RENCANA KERJA (DIPISAH MENJADI BUAT RENCANA & UPDATE REALISASI)
+# KONTEN 2: RENCANA KERJA (BUAT RENCANA & UPDATE REALISASI)
 # =========================================================
 elif active_menu == "Rencana Kerja":
   st.subheader("Rencana Kerja & Realisasi Operasional")
@@ -624,7 +644,6 @@ elif active_menu == "Rencana Kerja":
         "Silakan daftarkan ID Petak terlebih dahulu pada menu 'Input ID Petak'."
     )
   else:
-    # Buat pilihan unik berdasarkan kombinasi ID Petak & Jenis Kegiatan
     df["Combo_Key"] = (
         "ID: "
         + df["ID Petak"].astype(str)
@@ -646,7 +665,6 @@ elif active_menu == "Rencana Kerja":
             "Pilih Petak & Jenis Kegiatan (Rencana)", list_combo
         )
 
-        # Ambil data SPK secara read-only berdasarkan pilihan
         row_matched = df[df["Combo_Key"] == selected_combo_r].iloc[0]
         st.info(f"Nomor SPK (Read-only): **{row_matched['SPK']}**")
 
@@ -789,7 +807,7 @@ elif active_menu == "Rencana Kerja":
       )
 
 # =========================================================
-# KONTEN 3: JADWAL KERJA SELANJUTNYA (HANYA MENAMPILKAN SPK)
+# KONTEN 3: JADWAL KERJA SELANJUTNYA
 # =========================================================
 elif active_menu == "Jadwal Kerja Selanjutnya":
   st.subheader("Jadwal Kerja Selanjutnya")
