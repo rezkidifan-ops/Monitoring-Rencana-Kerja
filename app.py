@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. TEMA DESAIN & CUSTOM CSS (FONT INTER, LEBIH KECIL, BERSIH, PROFESIONAL)
+# 2. TEMA DESAIN & CUSTOM CSS (BERSIH, PROFESIONAL, TANPA TEKS PRESS ENTER)
 st.markdown(
     """<style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -30,6 +30,11 @@ footer,
     display: none !important;
     visibility: hidden !important;
     height: 0px !important;
+}
+
+/* HILANGKAN TEKS PANDUAN SUBMIT (PRESS ENTER / CTRL+ENTER) */
+[data-testid="InputInstructions"] {
+    display: none !important;
 }
 
 html, body, [class*="css"] {
@@ -147,7 +152,6 @@ html, body, [class*="css"] {
     color: white;
 }
 
-/* KECILKAN UKURAN FONT HEADER STREAMLIT */
 h2 {
     font-size: 1.15rem !important;
     font-weight: 600 !important;
