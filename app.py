@@ -157,6 +157,7 @@ div[data-testid="stMetricValue"] > div {
     font-size: 1.4rem !important;
 }
 
+/* Tombol Utama Umum */
 div.stButton > button {
     background: linear-gradient(135deg, #2E5A36 0%, #1B3B22 100%) !important;
     color: #FFFFFF !important;
@@ -175,29 +176,26 @@ div.stButton > button:hover {
     box-shadow: 0 6px 18px rgba(200, 16, 46, 0.35) !important;
 }
 
+/* Styling Khusus Tombol Keluar Kecil di Atas */
+div[data-testid="column"] button[kind="secondary"] {
+    background: #C8102E !important;
+    color: #FFFFFF !important;
+    height: 2.2rem !important;
+    min-height: 2.2rem !important;
+    font-size: 0.8rem !important;
+    border-radius: 8px !important;
+    border-left: none !important;
+    box-shadow: 0 2px 6px rgba(200, 16, 46, 0.2) !important;
+    padding: 0rem 0.5rem !important;
+}
+div[data-testid="column"] button[kind="secondary"]:hover {
+    background: #990000 !important;
+}
+
 div[data-baseweb="input"] > div, div[data-baseweb="select"] > div {
     border-radius: 10px !important;
     border-color: #CBD5E1 !important;
     background-color: #FFFFFF !important;
-}
-
-.stTabs [data-baseweb="tab-list"] {
-    gap: 6px;
-    background-color: #E2E8F0;
-    padding: 5px;
-    border-radius: 12px;
-}
-.stTabs [data-baseweb="tab"] {
-    height: 2.8rem;
-    border-radius: 8px;
-    font-weight: 700;
-    font-size: 0.88rem;
-    color: #475569;
-}
-.stTabs [aria-selected="true"] {
-    background-color: #FFFFFF !important;
-    color: #2E5A36 !important;
-    border-bottom: 3px solid #C8102E;
 }
 
 div[data-testid="stDataFrame"] {
@@ -291,13 +289,15 @@ def load_users():
     except Exception as e:
         return pd.DataFrame(columns=USER_COLUMNS)
 
-# 4. INISIALISASI SESI LOGIN
+# 4. INISIALISASI SESI LOGIN & NAVIGASI TOMBOL
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
 if "user_pj" not in st.session_state:
     st.session_state["user_pj"] = ""
 if "user_role" not in st.session_state:
     st.session_state["user_role"] = "User"
+if "active_menu" not in st.session_state:
+    st.session_state["active_menu"] = "Input Data"
 
 EUCALYPTUS_SVG = """<svg class="eucalyptus-tree-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M48 92 C 48 60, 52 40, 50 10 C 50 10, 47 35, 45 92 Z" fill="#FFFFFF" opacity="0.95"/>
@@ -390,24 +390,36 @@ if not st.session_state["logged_in"]:
         st.stop()
 
 # =========================================================
-# DASHBOARD & OPERASIONAL UTAMA
+# DASHBOARD & OPERASIONAL UTAMA (SETELAH LOGIN)
 # =========================================================
+# Latar Belakang Abstrak Merah, Hijau, dan Putih
+st.markdown("""<style>
+.stApp {
+    background: 
+        radial-gradient(circle at 10% 15%, rgba(46, 90, 54, 0.22) 0%, transparent 45%),
+        radial-gradient(circle at 90% 85%, rgba(200, 16, 46, 0.18) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.9) 0%, rgba(240, 247, 242, 1) 100%) !important;
+    background-attachment: fixed !important;
+}
+</style>""", unsafe_allow_html=True)
+
 df = load_data()
 is_admin = str(st.session_state.get("user_role", "User")).strip().lower() == "admin"
-
 role_badge = "Administrator" if is_admin else "Field Officer"
-st.markdown(f"""<div class="intro-banner-eucalyptus">
-<div class="banner-content">
-<div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
-<h1>Monitoring Silvikultur Eucalyptus</h1>
-<p>Username: <b>{st.session_state['user_pj']}</b> | Akses: <b>{role_badge}</b></p>
-</div>
-{EUCALYPTUS_SVG}
-</div>""", unsafe_allow_html=True)
 
-col_space, col_logout = st.columns([3, 1.5])
+# Banner Utama & Tombol Keluar Kecil di Kanan Atas (Tanpa Logo)
+col_banner, col_logout = st.columns([10, 1.2], vertical_alignment="center")
+with col_banner:
+    st.markdown(f"""<div class="intro-banner-eucalyptus" style="margin-bottom: 0;">
+    <div class="banner-content">
+    <div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
+    <h1>Monitoring Silvikultur Eucalyptus</h1>
+    <p>Username: <b>{st.session_state['user_pj']}</b> | Akses: <b>{role_badge}</b></p>
+    </div>
+    </div>""", unsafe_allow_html=True)
+
 with col_logout:
-    if st.button("Keluar", use_container_width=True):
+    if st.button("Keluar", use_container_width=True, type="secondary"):
         st.session_state["logged_in"] = False
         st.session_state["user_pj"] = ""
         st.session_state["user_role"] = "User"
@@ -416,16 +428,34 @@ with col_logout:
 st.write("")
 
 # =========================================================
-# 3 MENU UTAMA (TAB NAVIGASI DI PALING ATAS)
+# NAVIGASI BERBENTUK TOMBOL
 # =========================================================
-tab_input, tab_rencana, tab_jadwal = st.tabs([
-    "Input Data", 
-    "Rencana Kerja", 
-    "Jadwal Kerja Selanjutnya"
-])
+b_col1, b_col2, b_col3 = st.columns(3)
 
-# TAB 1: INPUT DATA
-with tab_input:
+with b_col1:
+    if st.button("📝 Input Data", use_container_width=True):
+        st.session_state["active_menu"] = "Input Data"
+        st.rerun()
+
+with b_col2:
+    if st.button("📊 Rencana Kerja", use_container_width=True):
+        st.session_state["active_menu"] = "Rencana Kerja"
+        st.rerun()
+
+with b_col3:
+    if st.button("📅 Jadwal Kerja Selanjutnya", use_container_width=True):
+        st.session_state["active_menu"] = "Jadwal Kerja Selanjutnya"
+        st.rerun()
+
+st.write("")
+
+# =========================================================
+# KONTEN BERDASARKAN TOMBOL MENU YANG DIPILIH
+# =========================================================
+active_menu = st.session_state["active_menu"]
+
+# KONTEN 1: INPUT DATA
+if active_menu == "Input Data":
     st.subheader("Formulir Input Data Lapangan")
     list_petak_existing = []
     if not df.empty and "ID Petak" in df.columns:
@@ -535,7 +565,7 @@ with tab_input:
                 st.success(f"Data petak '{id_petak}' berhasil disimpan.")
                 st.rerun()
 
-    # Panel Admin di dalam tab Input Data jika role admin
+    # Panel Admin di dalam menu Input Data jika role admin
     if is_admin:
         st.markdown("---")
         st.subheader("Panel Administrator")
@@ -551,8 +581,8 @@ with tab_input:
                 st.success("Data berhasil dihapus.")
                 st.rerun()
 
-# TAB 2: RENCANA KERJA
-with tab_rencana:
+# KONTEN 2: RENCANA KERJA
+elif active_menu == "Rencana Kerja":
     st.subheader("Monitoring Rencana Kerja")
     
     # RINGKASAN METRIK
@@ -587,8 +617,8 @@ with tab_rencana:
 
     st.dataframe(filtered_df, use_container_width=True, hide_index=True)
 
-# TAB 3: JADWAL KERJA SELANJUTNYA
-with tab_jadwal:
+# KONTEN 3: JADWAL KERJA SELANJUTNYA
+elif active_menu == "Jadwal Kerja Selanjutnya":
     st.subheader("Jadwal Kerja Selanjutnya")
     st.write("Kelengkapan nomor SPK dan agenda operasional lanjutan.")
     
