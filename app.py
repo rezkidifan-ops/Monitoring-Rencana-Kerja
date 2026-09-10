@@ -510,118 +510,189 @@ st.write("")
 active_menu = st.session_state["active_menu"]
 
 # =========================================================
-# KONTEN 1: INPUT ID PETAK (CEK DUPLIKASI ID PETAK + JENIS KEGIATAN)
+# KONTEN 1: INPUT ID PETAK & UPDATE SPK TERPISAH
 # =========================================================
 if active_menu == "Input ID Petak":
-  st.subheader("Formulir Pendaftaran ID Petak & Nomor SPK")
+  # Sub-tab di dalam menu Input ID Petak untuk Pendaftaran & Update SPK
+  sub_tab_reg, sub_tab_spk = st.tabs(
+      ["Formulir Pendaftaran ID Petak", "Update Nomor SPK"]
+  )
 
-  with st.form("form_input_id_petak", clear_on_submit=True):
-    col_f1, col_f2 = st.columns(2)
+  # ------------------------------------------------_
+  # SUB-TAB 1: PENDAFTARAN ID PETAK (SPK TIDAK WAJIB)
+  # ------------------------------------------------_
+  with sub_tab_reg:
+    st.subheader("Formulir Pendaftaran ID Petak")
 
-    with col_f1:
-      id_petak = st.text_input("ID Petak", placeholder="Contoh: EUC-A01")
-      spk_input = st.text_input(
-          "Nomor SPK", placeholder="Contoh: SPK/EUC/2026/001"
+    with st.form("form_input_id_petak", clear_on_submit=True):
+      col_f1, col_f2 = st.columns(2)
+
+      with col_f1:
+        id_petak = st.text_input("ID Petak", placeholder="Contoh: EUC-A01")
+        spk_input = st.text_input(
+            "Nomor SPK (Opsional / Bisa diupdate nanti)",
+            placeholder="Contoh: SPK/EUC/2026/001",
+        )
+        jenis_kegiatan = st.selectbox(
+            "Jenis Kegiatan",
+            [
+                "Established - PLTB",
+                "Established - Kuku Macan",
+                "Established - Parit",
+                "Established - Teras",
+                "Established - Lining+Sticking",
+                "Established - Tanam",
+                "Established - Tanam & Aquasorb",
+                "Established - Sulam",
+                "Established - PPS",
+                "Established - PPS Dron",
+                "Maintenance - MW 1",
+                "Maintenance - CW 1",
+                "Maintenance - CW 2",
+                "Maintenance - CW 3",
+                "Maintenance - CW 4",
+                "Maintenance - CW 5",
+                "Maintenance - CW 6",
+                "Maintenance - CW 7",
+                "Maintenance - MW 2",
+                "Maintenance - MW 3",
+                "Maintenance - PS1",
+                "Maintenance - PS1 drone",
+                "Maintenance - HPT",
+                "Maintenance - HPT Drone",
+                "Maintenance - PS2 Drone",
+                "Maintenance - PS 2",
+                "Lainnya",
+            ],
+        )
+        luas = st.number_input("Luas Area (Ha)", min_value=0.0, step=0.1)
+
+      with col_f2:
+        lokasi = st.text_input(
+            "Lokasi / Wilayah", placeholder="Contoh: Sektor Utara"
+        )
+        keterangan = st.text_area("Keterangan Tambahan", height=135)
+
+      submitted_petak = st.form_submit_button(
+          "Simpan ID Petak", use_container_width=True
       )
-      jenis_kegiatan = st.selectbox(
-          "Jenis Kegiatan",
-          [
-              "Established - PLTB",
-              "Established - Kuku Macan",
-              "Established - Parit",
-              "Established - Teras",
-              "Established - Lining+Sticking",
-              "Established - Tanam",
-              "Established - Tanam & Aquasorb",
-              "Established - Sulam",
-              "Established - PPS",
-              "Established - PPS Dron",
-              "Maintenance - MW 1",
-              "Maintenance - CW 1",
-              "Maintenance - CW 2",
-              "Maintenance - CW 3",
-              "Maintenance - CW 4",
-              "Maintenance - CW 5",
-              "Maintenance - CW 6",
-              "Maintenance - CW 7",
-              "Maintenance - MW 2",
-              "Maintenance - MW 3",
-              "Maintenance - PS1",
-              "Maintenance - PS1 drone",
-              "Maintenance - HPT",
-              "Maintenance - HPT Drone",
-              "Maintenance - PS2 Drone",
-              "Maintenance - PS 2",
-              "Lainnya",
-          ],
-      )
-      luas = st.number_input("Luas Area (Ha)", min_value=0.0, step=0.1)
 
-    with col_f2:
-      lokasi = st.text_input("Lokasi / Wilayah", placeholder="Contoh: Sektor Utara")
-      keterangan = st.text_area("Keterangan Tambahan", height=135)
+      if submitted_petak:
+        if not id_petak.strip() or luas <= 0:
+          st.error("ID Petak dan Luas wajib diisi dengan benar.")
+        else:
+          # Pengecekan Duplikasi: ID Petak & Jenis Kegiatan sama ditolak
+          is_duplicate = False
+          if not df.empty:
+            matched_dup = df[
+                (
+                    df["ID Petak"].astype(str).str.strip().str.upper()
+                    == id_petak.strip().upper()
+                )
+                & (
+                    df["Jenis Kegiatan"].astype(str).str.strip()
+                    == jenis_kegiatan
+                )
+            ]
+            if not matched_dup.empty:
+              is_duplicate = True
 
-    submitted_petak = st.form_submit_button(
-        "Simpan ID Petak", use_container_width=True
+          if is_duplicate:
+            st.error(
+                f"Data untuk ID Petak '{id_petak.strip()}' dengan Jenis"
+                f" Kegiatan '{jenis_kegiatan}' sudah tersedia. Mohon gunakan"
+                " jenis kegiatan yang berbeda."
+            )
+          else:
+            pj_final = st.session_state["user_pj"]
+            no_baru = len(df) + 1 if not df.empty else 1
+            final_spk = (
+                spk_input.strip() if spk_input.strip() else "-"
+            )  # SPK opsional, jika kosong diisi "-"
+
+            new_row = pd.DataFrame([{
+                "No": no_baru,
+                "ID Petak": id_petak.strip(),
+                "SPK": final_spk,
+                "Jenis Kegiatan": jenis_kegiatan,
+                "Luas": luas,
+                "Lokasi": lokasi.strip(),
+                "Keterangan": keterangan.strip(),
+                "Username": pj_final,
+                "Tanggal Rencana Kerja": str(datetime.date.today()),
+                "Tanggal Mulai Bekerja": str(datetime.date.today()),
+                "Tanggal Selesai Kerja": str(datetime.date.today()),
+                "Rencana Tenaga Kerja": 0,
+                "Actual Tenaga Kerja": 0,
+                "Rencana Produktivitas": 0.0,
+                "Actual Produktivitas": 0.0,
+                "Produktivitas Sampai Hari ini": 0.0,
+                "Sisa luas belum dikerjakan": luas,
+                "Rincian": "On Progres - Petak terdaftar",
+            }])
+
+            updated_df = pd.concat([df, new_row], ignore_index=True)
+            safe_gsheets_update("Sheet1", updated_df)
+            st.success(
+                f"ID Petak '{id_petak}' dengan kegiatan '{jenis_kegiatan}'"
+                " berhasil didaftarkan."
+            )
+            st.rerun()
+
+  # ------------------------------------------------_
+  # SUB-TAB 2: UPDATE NOMOR SPK BERDASARKAN ID PETAK & JENIS KEGIATAN
+  # ------------------------------------------------_
+  with sub_tab_spk:
+    st.subheader("Pembaruan Nomor SPK")
+    st.write(
+        "Pilih ID Petak dan Jenis Kegiatan yang sudah terdaftar untuk"
+        " memperbarui nomor SPK."
     )
 
-    if submitted_petak:
-      if not id_petak.strip() or not spk_input.strip() or luas <= 0:
-        st.error(
-            "ID Petak, Nomor SPK, dan Luas wajib diisi dengan benar."
+    if df.empty:
+      st.info("Belum ada data petak yang terdaftar di database.")
+    else:
+      df["Combo_Key_SPK"] = (
+          "ID: "
+          + df["ID Petak"].astype(str)
+          + " | Kegiatan: "
+          + df["Jenis Kegiatan"].astype(str)
+          + " (SPK Saat Ini: "
+          + df["SPK"].astype(str)
+          + ")"
+      )
+      list_combo_spk = df["Combo_Key_SPK"].dropna().unique().tolist()
+
+      with st.form("form_update_spk"):
+        selected_combo_spk = st.selectbox(
+            "Pilih Petak & Jenis Kegiatan", list_combo_spk
         )
-      else:
-        # Pengecekan Duplikasi: ID Petak & Jenis Kegiatan sama ditolak
-        is_duplicate = False
-        if not df.empty:
-          matched_dup = df[
-              (
-                  df["ID Petak"].astype(str).str.strip().str.upper()
-                  == id_petak.strip().upper()
+        new_spk_input = st.text_input(
+            "Nomor SPK Baru", placeholder="Contoh: SPK/EUC/2026/001"
+        )
+
+        submit_update_spk = st.form_submit_button(
+            "Simpan Pembaruan SPK", use_container_width=True
+        )
+
+        if submit_update_spk:
+          if not new_spk_input.strip():
+            st.error("Nomor SPK baru tidak boleh kosong.")
+          else:
+            matched_idx = df[df["Combo_Key_SPK"] == selected_combo_spk].index
+            if not matched_idx.empty:
+              idx = matched_idx[0]
+              df.loc[idx, "SPK"] = new_spk_input.strip()
+
+              # Simpan perubahan ke Google Sheets (buang kolom bantuan sementara)
+              safe_gsheets_update(
+                  "Sheet1", df.drop(columns=["Combo_Key_SPK"])
               )
-              & (df["Jenis Kegiatan"].astype(str).str.strip() == jenis_kegiatan)
-          ]
-          if not matched_dup.empty:
-            is_duplicate = True
-
-        if is_duplicate:
-          st.error(
-              f"Data untuk ID Petak '{id_petak.strip()}' dengan Jenis"
-              f" Kegiatan '{jenis_kegiatan}' sudah tersedia. Mohon gunakan"
-              " jenis kegiatan yang berbeda."
-          )
-        else:
-          pj_final = st.session_state["user_pj"]
-          no_baru = len(df) + 1 if not df.empty else 1
-
-          new_row = pd.DataFrame([{
-              "No": no_baru,
-              "ID Petak": id_petak.strip(),
-              "SPK": spk_input.strip(),
-              "Jenis Kegiatan": jenis_kegiatan,
-              "Luas": luas,
-              "Lokasi": lokasi.strip(),
-              "Keterangan": keterangan.strip(),
-              "Username": pj_final,
-              "Tanggal Rencana Kerja": str(datetime.date.today()),
-              "Tanggal Mulai Bekerja": str(datetime.date.today()),
-              "Tanggal Selesai Kerja": str(datetime.date.today()),
-              "Rencana Tenaga Kerja": 0,
-              "Actual Tenaga Kerja": 0,
-              "Rencana Produktivitas": 0.0,
-              "Actual Produktivitas": 0.0,
-              "Produktivitas Sampai Hari ini": 0.0,
-              "Sisa luas belum dikerjakan": luas,
-              "Rincian": "On Progres - Petak terdaftar",
-          }])
-
-          updated_df = pd.concat([df, new_row], ignore_index=True)
-          safe_gsheets_update("Sheet1", updated_df)
-          st.success(
-              f"ID Petak '{id_petak}' dengan kegiatan '{jenis_kegiatan}' berhasil"
-              " didaftarkan."
-          )
-          st.rerun()
+              st.success(
+                  "Nomor SPK berhasil diperbarui untuk petak dan jenis"
+                  " kegiatan tersebut."
+              )
+              st.rerun()
 
   st.markdown("### Daftar ID Petak Terdaftar")
   if not df.empty:
