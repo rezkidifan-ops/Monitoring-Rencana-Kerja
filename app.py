@@ -411,7 +411,7 @@ if not df.empty:
   )
   alert_count = len(df[has_prod & empty_spk])
 
-# Tombol Alert & Keluar di Paling Atas Kanan (Tanpa Ikon, Bersih)
+# Tombol Alert & Keluar di Paling Atas Kanan
 col_spacer, col_alert, col_logout = st.columns([5.6, 2.2, 2.2])
 
 with col_alert:
@@ -454,7 +454,7 @@ if st.session_state["show_alert_sidebar"]:
       """
         <div class="alert-sidebar-panel">
             <h3>🚨 Alert: Petak Belum Memiliki SPK</h3>
-            <p style="font-size: 12px; color: #ccc;">Daftar ID Petak yang sudah terisi kegiatan/produktivitas namun nomor SPK-nya masih kosong:</p>
+            <p style="font-size: 12px; color: #ccc;">Daftar ID Petak yang nomor SPK-nya masih kosong:</p>
         </div>
     """,
       unsafe_allow_html=True,
@@ -468,18 +468,10 @@ if st.session_state["show_alert_sidebar"]:
         | (spk_series == "None")
         | (spk_series == "nan")
     )
-    has_prod = (
-        pd.to_numeric(df["Actual Produktivitas"], errors="coerce").fillna(0) > 0
-    ) | (df["Jenis Kegiatan"].notnull() & (df["Jenis Kegiatan"] != ""))
-    alert_df = df[has_prod & empty_spk]
+    alert_df = df[empty_spk]
     if not alert_df.empty:
       st.dataframe(
-          alert_df[[
-              "ID Petak",
-              "Jenis Kegiatan",
-              "Tanggal Rencana Kerja",
-              "Actual Produktivitas",
-          ]],
+          alert_df[["ID Petak", "Jenis Kegiatan", "Lokasi", "Keterangan"]],
           use_container_width=True,
           hide_index=True,
       )
@@ -494,7 +486,7 @@ if st.session_state["show_alert_sidebar"]:
   st.markdown("---")
 
 # =========================================================
-# NAVIGASI MENU UTAMA (TANPA IKON, HANYA TEKS BOLD)
+# NAVIGASI MENU UTAMA
 # =========================================================
 b_col1, b_col2, b_col3 = st.columns(3)
 
@@ -518,16 +510,19 @@ st.write("")
 active_menu = st.session_state["active_menu"]
 
 # =========================================================
-# KONTEN 1: INPUT ID PETAK
+# KONTEN 1: INPUT ID PETAK (TEMPAT PENGISIAN NOMOR SPK)
 # =========================================================
 if active_menu == "Input ID Petak":
-  st.subheader("Formulir Pendaftaran ID Petak")
+  st.subheader("Formulir Pendaftaran ID Petak & Nomor SPK")
 
   with st.form("form_input_id_petak", clear_on_submit=True):
     col_f1, col_f2 = st.columns(2)
 
     with col_f1:
       id_petak = st.text_input("ID Petak", placeholder="Contoh: EUC-A01")
+      spk_input = st.text_input(
+          "Nomor SPK", placeholder="Contoh: SPK/EUC/2026/001"
+      )
       jenis_kegiatan = st.selectbox(
           "Jenis Kegiatan",
           [
@@ -564,15 +559,17 @@ if active_menu == "Input ID Petak":
 
     with col_f2:
       lokasi = st.text_input("Lokasi / Wilayah", placeholder="Contoh: Sektor Utara")
-      keterangan = st.text_area("Keterangan Tambahan", height=105)
+      keterangan = st.text_area("Keterangan Tambahan", height=135)
 
     submitted_petak = st.form_submit_button(
         "Simpan ID Petak", use_container_width=True
     )
 
     if submitted_petak:
-      if not id_petak.strip() or luas <= 0:
-        st.error("ID Petak dan Luas wajib diisi dengan benar.")
+      if not id_petak.strip() or not spk_input.strip() or luas <= 0:
+        st.error(
+            "ID Petak, Nomor SPK, dan Luas wajib diisi dengan benar."
+        )
       else:
         pj_final = st.session_state["user_pj"]
         no_baru = len(df) + 1 if not df.empty else 1
@@ -580,7 +577,7 @@ if active_menu == "Input ID Petak":
         new_row = pd.DataFrame([{
             "No": no_baru,
             "ID Petak": id_petak.strip(),
-            "SPK": "-",
+            "SPK": spk_input.strip(),
             "Jenis Kegiatan": jenis_kegiatan,
             "Luas": luas,
             "Lokasi": lokasi.strip(),
@@ -601,15 +598,15 @@ if active_menu == "Input ID Petak":
         updated_df = pd.concat([df, new_row], ignore_index=True)
         safe_gsheets_update("Sheet1", updated_df)
         st.success(
-            f"ID Petak '{id_petak}' dengan jenis kegiatan '{jenis_kegiatan}'"
-            " berhasil didaftarkan."
+            f"ID Petak '{id_petak}' dengan SPK '{spk_input}' berhasil"
+            " didaftarkan."
         )
         st.rerun()
 
   st.markdown("### Daftar ID Petak Terdaftar")
   if not df.empty:
     st.dataframe(
-        df[["ID Petak", "Jenis Kegiatan", "Luas", "Lokasi", "Keterangan"]],
+        df[["ID Petak", "SPK", "Jenis Kegiatan", "Luas", "Lokasi", "Keterangan"]],
         use_container_width=True,
         hide_index=True,
     )
@@ -617,113 +614,152 @@ if active_menu == "Input ID Petak":
     st.info("Belum ada data petak yang terdaftar.")
 
 # =========================================================
-# KONTEN 2: RENCANA KERJA
+# KONTEN 2: RENCANA KERJA (DIPISAH MENJADI BUAT RENCANA & UPDATE REALISASI)
 # =========================================================
 elif active_menu == "Rencana Kerja":
-  st.subheader("Rencana Kerja & Alokasi Tenaga Kerja")
+  st.subheader("Rencana Kerja & Realisasi Operasional")
 
   if df.empty:
     st.warning(
         "Silakan daftarkan ID Petak terlebih dahulu pada menu 'Input ID Petak'."
     )
   else:
-    list_petak_tersedia = df["ID Petak"].dropna().unique().tolist()
+    # Buat pilihan unik berdasarkan kombinasi ID Petak & Jenis Kegiatan
+    df["Combo_Key"] = (
+        "ID: "
+        + df["ID Petak"].astype(str)
+        + " | Kegiatan: "
+        + df["Jenis Kegiatan"].astype(str)
+    )
+    list_combo = df["Combo_Key"].dropna().unique().tolist()
 
-    with st.form("form_rencana_kerja"):
-      selected_petak = st.selectbox(
-          "Pilih ID Petak Terdaftar", list_petak_tersedia
-      )
+    sub_tab_rencana, sub_tab_realisasi = st.tabs(
+        ["Buat Rencana", "Update Realisasi"]
+    )
 
-      col_rk1, col_rk2 = st.columns(2)
-      with col_rk1:
-        spk_input = st.text_input(
-            "Nomor SPK", placeholder="Contoh: SPK/EUC/2026/001"
-        )
-        tgl_rencana = st.date_input(
-            "Tanggal Rencana Kerja", value=datetime.date.today()
-        )
-        tgl_mulai = st.date_input(
-            "Tanggal Mulai Bekerja", value=datetime.date.today()
-        )
-        tgl_selesai = st.date_input(
-            "Tanggal Selesai Kerja", value=datetime.date.today()
-        )
-      with col_rk2:
-        rencana_tk = st.number_input(
-            "Rencana Tenaga Kerja (Orang)", min_value=0, step=1
-        )
-        actual_tk = st.number_input(
-            "Aktual Tenaga Kerja (Orang)", min_value=0, step=1
-        )
-        rencana_prod = st.number_input(
-            "Rencana Produktivitas (Ha)", min_value=0.0, step=0.1
-        )
-        actual_prod = st.number_input(
-            "Aktual Produktivitas (Ha)", min_value=0.0, step=0.1
+    # ------------------------------------------------_
+    # SUB-TAB 1: BUAT RENCANA
+    # ------------------------------------------------_
+    with sub_tab_rencana:
+      with st.form("form_buat_rencana"):
+        selected_combo_r = st.selectbox(
+            "Pilih Petak & Jenis Kegiatan (Rencana)", list_combo
         )
 
-      rincian_input = st.text_area("Catatan Operasional", height=80)
+        # Ambil data SPK secara read-only berdasarkan pilihan
+        row_matched = df[df["Combo_Key"] == selected_combo_r].iloc[0]
+        st.info(f"Nomor SPK (Read-only): **{row_matched['SPK']}**")
 
-      submit_rencana = st.form_submit_button(
-          "Simpan Rencana Kerja", use_container_width=True
-      )
-
-      if submit_rencana:
-        matched_idx = df[
-            df["ID Petak"].astype(str).str.strip()
-            == str(selected_petak).strip()
-        ].index
-        if not matched_idx.empty:
-          idx = matched_idx[0]
-          luas_petak = float(
-              df.loc[idx, "Luas"] if pd.notna(df.loc[idx, "Luas"]) else 0.0
+        col_rk1, col_rk2 = st.columns(2)
+        with col_rk1:
+          tgl_rencana = st.date_input(
+              "Tanggal Rencana Kerja", value=datetime.date.today()
+          )
+          tgl_mulai = st.date_input(
+              "Tanggal Mulai Bekerja", value=datetime.date.today()
+          )
+          tgl_selesai = st.date_input(
+              "Tanggal Selesai Kerja", value=datetime.date.today()
+          )
+        with col_rk2:
+          rencana_tk = st.number_input(
+              "Rencana Tenaga Kerja (Orang)", min_value=0, step=1
+          )
+          rencana_prod = st.number_input(
+              "Rencana Produktivitas (Ha)", min_value=0.0, step=0.1
           )
 
-          prev_actual = pd.to_numeric(
-              df.loc[idx, "Actual Produktivitas"], errors="coerce"
-          )
-          if pd.isna(prev_actual):
-            prev_actual = 0.0
+        submit_rencana_btn = st.form_submit_button(
+            "Simpan Rencana Kerja", use_container_width=True
+        )
 
-          prod_kumulatif = prev_actual + actual_prod
-          prod_hari_ini = min(
-              prod_kumulatif,
-              luas_petak if luas_petak > 0 else prod_kumulatif,
-          )
-          sisa_luas = max(
-              0.0,
-              (luas_petak - prod_hari_ini) if luas_petak > 0 else 0.0,
-          )
+        if submit_rencana_btn:
+          matched_idx = df[df["Combo_Key"] == selected_combo_r].index
+          if not matched_idx.empty:
+            idx = matched_idx[0]
+            df.loc[idx, "Tanggal Rencana Kerja"] = tgl_rencana.strftime(
+                "%Y-%m-%d"
+            )
+            df.loc[idx, "Tanggal Mulai Bekerja"] = tgl_mulai.strftime("%Y-%m-%d")
+            df.loc[idx, "Tanggal Selesai Kerja"] = tgl_selesai.strftime(
+                "%Y-%m-%d"
+            )
+            df.loc[idx, "Rencana Tenaga Kerja"] = rencana_tk
+            df.loc[idx, "Rencana Produktivitas"] = rencana_prod
 
-          status_kerja = "Complete" if sisa_luas <= 0 else "On Progres"
-          final_rincian = (
-              f"{status_kerja} - {rincian_input.strip()}"
-              if rincian_input.strip()
-              else status_kerja
-          )
+            safe_gsheets_update("Sheet1", df.drop(columns=["Combo_Key"]))
+            st.success("Rencana kerja berhasil disimpan.")
+            st.rerun()
 
-          df.loc[idx, "SPK"] = (
-              spk_input.strip() if spk_input.strip() else df.loc[idx, "SPK"]
-          )
-          df.loc[idx, "Tanggal Rencana Kerja"] = tgl_rencana.strftime("%Y-%m-%d")
-          df.loc[idx, "Tanggal Mulai Bekerja"] = tgl_mulai.strftime("%Y-%m-%d")
-          df.loc[idx, "Tanggal Selesai Kerja"] = tgl_selesai.strftime("%Y-%m-%d")
-          df.loc[idx, "Rencana Tenaga Kerja"] = rencana_tk
-          df.loc[idx, "Actual Tenaga Kerja"] = actual_tk
-          df.loc[idx, "Rencana Produktivitas"] = rencana_prod
-          df.loc[idx, "Actual Produktivitas"] = actual_prod
-          df.loc[idx, "Produktivitas Sampai Hari ini"] = prod_kumulatif
-          df.loc[idx, "Sisa luas belum dikerjakan"] = sisa_luas
-          df.loc[idx, "Rincian"] = final_rincian
+    # ------------------------------------------------_
+    # SUB-TAB 2: UPDATE REALISASI
+    # ------------------------------------------------_
+    with sub_tab_realisasi:
+      with st.form("form_update_realisasi"):
+        selected_combo_u = st.selectbox(
+            "Pilih Petak & Jenis Kegiatan (Realisasi)", list_combo
+        )
 
-          safe_gsheets_update("Sheet1", df)
-          st.success(
-              f"Rencana kerja untuk ID Petak '{selected_petak}' berhasil"
-              " diperbarui."
-          )
-          st.rerun()
+        row_matched_u = df[df["Combo_Key"] == selected_combo_u].iloc[0]
+        st.info(f"Nomor SPK (Read-only): **{row_matched_u['SPK']}**")
 
-    st.markdown("### Rekapitulasi Rencana Kerja")
+        col_rl1, col_rl2 = st.columns(2)
+        with col_rl1:
+          actual_tk = st.number_input(
+              "Aktual Tenaga Kerja (Orang)", min_value=0, step=1
+          )
+          actual_prod = st.number_input(
+              "Aktual Produktivitas (Ha)", min_value=0.0, step=0.1
+          )
+        with col_rl2:
+          rincian_input = st.text_area("Catatan Operasional / Rincian", height=95)
+
+        submit_realisasi_btn = st.form_submit_button(
+            "Simpan Update Realisasi", use_container_width=True
+        )
+
+        if submit_realisasi_btn:
+          matched_idx = df[df["Combo_Key"] == selected_combo_u].index
+          if not matched_idx.empty:
+            idx = matched_idx[0]
+            luas_petak = float(
+                df.loc[idx, "Luas"] if pd.notna(df.loc[idx, "Luas"]) else 0.0
+            )
+
+            prev_actual = pd.to_numeric(
+                df.loc[idx, "Actual Produktivitas"], errors="coerce"
+            )
+            if pd.isna(prev_actual):
+              prev_actual = 0.0
+
+            prod_kumulatif = prev_actual + actual_prod
+            prod_hari_ini = min(
+                prod_kumulatif,
+                luas_petak if luas_petak > 0 else prod_kumulatif,
+            )
+            sisa_luas = max(
+                0.0,
+                (luas_petak - prod_hari_ini) if luas_petak > 0 else 0.0,
+            )
+
+            status_kerja = "Complete" if sisa_luas <= 0 else "On Progres"
+            final_rincian = (
+                f"{status_kerja} - {rincian_input.strip()}"
+                if rincian_input.strip()
+                else status_kerja
+            )
+
+            df.loc[idx, "Actual Tenaga Kerja"] = actual_tk
+            df.loc[idx, "Actual Produktivitas"] = actual_prod
+            df.loc[idx, "Produktivitas Sampai Hari ini"] = prod_kumulatif
+            df.loc[idx, "Sisa luas belum dikerjakan"] = sisa_luas
+            df.loc[idx, "Rincian"] = final_rincian
+
+            safe_gsheets_update("Sheet1", df.drop(columns=["Combo_Key"]))
+            st.success("Realisasi kerja berhasil diperbarui.")
+            st.rerun()
+
+    st.markdown("### Rekapitulasi Rencana & Realisasi Kerja")
     if not df.empty:
       df_display = df.copy()
       df_display["Bulan"] = (
@@ -753,56 +789,33 @@ elif active_menu == "Rencana Kerja":
       )
 
 # =========================================================
-# KONTEN 3: JADWAL KERJA SELANJUTNYA
+# KONTEN 3: JADWAL KERJA SELANJUTNYA (HANYA MENAMPILKAN SPK)
 # =========================================================
 elif active_menu == "Jadwal Kerja Selanjutnya":
   st.subheader("Jadwal Kerja Selanjutnya")
-  st.write("Kelengkapan nomor SPK dan pemantauan operasional lanjutan.")
+  st.write("Pemantauan kegiatan dan nomor SPK terdaftar.")
 
   if df.empty:
     st.info("Belum terdapat data kegiatan.")
   else:
-    spk_series = df["SPK"].astype(str).str.strip()
-    empty_spk_mask = (
-        df["SPK"].isna()
-        | (spk_series == "")
-        | (spk_series == "-")
-        | (spk_series == "None")
-        | (spk_series == "nan")
-    )
     user_mask = (
         df["Username"].astype(str).str.strip().str.upper()
         == st.session_state["user_pj"].strip().upper()
     )
+    user_df = df[user_mask]
 
-    unfilled_df = df[user_mask & empty_spk_mask]
-
-    if unfilled_df.empty:
-      st.info("Seluruh kegiatan Anda telah memiliki Nomor SPK.")
+    if user_df.empty:
+      st.info("Belum ada data kegiatan untuk akun Anda.")
     else:
-      options_spk = {}
-      for idx, row in unfilled_df.iterrows():
-        label = f"ID: {row['ID Petak']} | Kegiatan: {row['Jenis Kegiatan']} | Luas: {row['Luas']} Ha"
-        options_spk[label] = idx
-
-      selected_label = st.selectbox(
-          "Pilih Kegiatan Tanpa SPK", list(options_spk.keys())
+      st.dataframe(
+          user_df[[
+              "ID Petak",
+              "SPK",
+              "Jenis Kegiatan",
+              "Lokasi",
+              "Tanggal Rencana Kerja",
+              "Keterangan",
+          ]],
+          use_container_width=True,
+          hide_index=True,
       )
-      target_idx = options_spk[selected_label]
-
-      with st.form("form_update_spk_user"):
-        input_spkan_baru = st.text_input(
-            "Nomor SPK Baru", placeholder="Contoh: SPK/EUC/2026/001"
-        )
-        btn_spk_submit = st.form_submit_button(
-            "Perbarui SPK", use_container_width=True
-        )
-
-        if btn_spk_submit:
-          if not input_spkan_baru.strip():
-            st.error("Nomor SPK tidak boleh kosong.")
-          else:
-            df.at[target_idx, "SPK"] = input_spkan_baru.strip()
-            safe_gsheets_update("Sheet1", df)
-            st.success("Nomor SPK berhasil diperbarui.")
-            st.rerun()
