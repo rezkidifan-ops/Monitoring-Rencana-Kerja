@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. TEMA DESAIN & CUSTOM CSS
+# 2. TEMA DESAIN & CUSTOM CSS (TAMPILAN BERSIH TANPA IKON & TATA LETAK STABIL DI ANDROID)
 st.markdown(
     """<style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -48,7 +48,27 @@ html, body, [class*="css"] {
     max-width: 1200px;
 }
 
-/* ================= BANNER UTAMA PENUH (TIDAK TERLIPAT) ================= */
+/* PAKSA TOMBOL UTAMA TETAP SEJAJAR DI MOBILE */
+@media (max-width: 640px) {
+    div[data-testid="stHorizontalBlock"] {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 6px !important;
+    }
+    div[data-testid="stColumn"] {
+        flex: 1 !important;
+        min-width: 0 !important;
+    }
+}
+
+/* STYLING TOMBOL: BOLD & TEMA HIJAU MERAH */
+.stButton > button {
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(46, 90, 54, 0.2) !important;
+}
+
+/* BANNER UTAMA */
 .intro-banner-eucalyptus {
     background: linear-gradient(135deg, #1B3B22 0%, #2E5A36 60%, #990000 100%);
     color: #FFFFFF;
@@ -374,13 +394,13 @@ if not df.empty:
   )
   alert_count = len(df[has_prod & empty_spk])
 
-# Tombol Lonceng Alert & Keluar di Paling Atas Kanan
+# Tombol Alert & Keluar di Paling Atas Kanan (Tanpa Ikon, Bersih)
 col_spacer, col_alert, col_logout = st.columns([5.6, 2.2, 2.2])
 
 with col_alert:
-  bell_label = f"🔔 {alert_count}" if alert_count > 0 else "🔔"
+  alert_btn_label = f"Alert ({alert_count})" if alert_count > 0 else "Alert"
   if st.button(
-      bell_label, use_container_width=True, help="Alert Petak Belum Ada SPK"
+      alert_btn_label, use_container_width=True, help="Alert Petak Belum Ada SPK"
   ):
     st.session_state["show_alert_sidebar"] = not st.session_state[
         "show_alert_sidebar"
@@ -388,7 +408,7 @@ with col_alert:
     st.rerun()
 
 with col_logout:
-  if st.button("🚪 Keluar", use_container_width=True, type="secondary"):
+  if st.button("Keluar", use_container_width=True, type="secondary"):
     st.session_state["logged_in"] = False
     st.session_state["user_pj"] = ""
     st.session_state["user_role"] = "User"
@@ -396,7 +416,7 @@ with col_logout:
 
 st.write("")
 
-# Banner Utama (Full Width tanpa terlipat)
+# Banner Utama
 st.markdown(
     f"""<div class="intro-banner-eucalyptus">
 <div class="banner-content">
@@ -457,22 +477,22 @@ if st.session_state["show_alert_sidebar"]:
   st.markdown("---")
 
 # =========================================================
-# NAVIGASI MENU UTAMA
+# NAVIGASI MENU UTAMA (TANPA IKON, HANYA TEKS BOLD)
 # =========================================================
 b_col1, b_col2, b_col3 = st.columns(3)
 
 with b_col1:
-  if st.button("📝 Input ID Petak", use_container_width=True):
+  if st.button("Input ID Petak", use_container_width=True):
     st.session_state["active_menu"] = "Input ID Petak"
     st.rerun()
 
 with b_col2:
-  if st.button("📊 Rencana Kerja", use_container_width=True):
+  if st.button("Rencana Kerja", use_container_width=True):
     st.session_state["active_menu"] = "Rencana Kerja"
     st.rerun()
 
 with b_col3:
-  if st.button("📅 Jadwal Kerja Selanjutnya", use_container_width=True):
+  if st.button("Jadwal Kerja Selanjutnya", use_container_width=True):
     st.session_state["active_menu"] = "Jadwal Kerja Selanjutnya"
     st.rerun()
 
