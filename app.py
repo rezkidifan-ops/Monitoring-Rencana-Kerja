@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. TEMA DESAIN & CUSTOM CSS (MENCEGAH KOLOM MENUMPUK DI ANDROID)
+# 2. TEMA DESAIN & CUSTOM CSS
 st.markdown(
     """<style>
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
@@ -48,20 +48,7 @@ html, body, [class*="css"] {
     max-width: 1200px;
 }
 
-/* ================= PAKSA KOLOM TETAP SEJAJAR DI MOBILE ================= */
-@media (max-width: 640px) {
-    div[data-testid="stHorizontalBlock"] {
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 8px !important;
-    }
-    div[data-testid="stColumn"] {
-        flex: 1 !important;
-        min-width: 0 !important;
-    }
-}
-
-/* ================= BANNER UTAMA RESPONSIF ================= */
+/* ================= BANNER UTAMA PENUH (TIDAK TERLIPAT) ================= */
 .intro-banner-eucalyptus {
     background: linear-gradient(135deg, #1B3B22 0%, #2E5A36 60%, #990000 100%);
     color: #FFFFFF;
@@ -387,24 +374,8 @@ if not df.empty:
   )
   alert_count = len(df[has_prod & empty_spk])
 
-# Top Bar: Banner, Tombol Lonceng Alert, dan Tombol Keluar (Sejajar)
-col_banner, col_alert, col_logout = st.columns(
-    [7.8, 1.1, 1.1], vertical_alignment="center"
-)
-
-with col_banner:
-  st.markdown(
-      f"""<div class="intro-banner-eucalyptus" style="margin-bottom: 0;">
-    <div class="banner-content">
-    <div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
-    <h1>Eucasystem Monitoring</h1>
-    <p>DISTRIK PULAU PUSAT</p>
-    <hr style="border-color: rgba(255,255,255,0.2); margin: 6px 0;">
-    <p style="font-size: 13px;">{st.session_state['user_pj']} | {role_badge}</p>
-    </div>
-    </div>""",
-      unsafe_allow_html=True,
-  )
+# Tombol Lonceng Alert & Keluar di Paling Atas Kanan
+col_spacer, col_alert, col_logout = st.columns([5.6, 2.2, 2.2])
 
 with col_alert:
   bell_label = f"🔔 {alert_count}" if alert_count > 0 else "🔔"
@@ -424,6 +395,21 @@ with col_logout:
     st.rerun()
 
 st.write("")
+
+# Banner Utama (Full Width tanpa terlipat)
+st.markdown(
+    f"""<div class="intro-banner-eucalyptus">
+<div class="banner-content">
+<div class="motto-badge-red">WE CARE • WE DO • WE WIN</div>
+<h1>Eucasystem Monitoring</h1>
+<p>DISTRIK PULAU PUSAT</p>
+<hr style="border-color: rgba(255,255,255,0.2); margin: 6px 0;">
+<p style="font-size: 13px;">{st.session_state['user_pj']} | {role_badge}</p>
+</div>
+{EUCALYPTUS_SVG}
+</div>""",
+    unsafe_allow_html=True,
+)
 
 # Panel Sidebar Alert
 if st.session_state["show_alert_sidebar"]:
@@ -471,7 +457,7 @@ if st.session_state["show_alert_sidebar"]:
   st.markdown("---")
 
 # =========================================================
-# NAVIGASI MENU UTAMA (SEJAJAR DALAM 1 BARIS)
+# NAVIGASI MENU UTAMA
 # =========================================================
 b_col1, b_col2, b_col3 = st.columns(3)
 
