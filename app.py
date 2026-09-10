@@ -811,6 +811,7 @@ elif active_menu == "Rencana Kerja":
                 else status_kerja
             )
 
+            # Realisasi yang diinput akan otomatis dianggap final dan tersimpan ke base data sheet (Sheet1)
             df.loc[idx, "Actual Tenaga Kerja"] = actual_tk
             df.loc[idx, "Actual Alat Berat"] = (
                 actual_alat.strip() if actual_alat.strip() else "-"
@@ -832,7 +833,7 @@ elif active_menu == "Rencana Kerja":
             safe_gsheets_update(
                 "Sheet1", df.drop(columns=["Combo_Key"], errors="ignore")
             )
-            st.success("Realisasi kerja berhasil diperbarui.")
+            st.success("Realisasi kerja berhasil diperbarui dan disimpan sebagai nilai final pada base data sheet.")
             st.rerun()
 
     st.markdown("### Rekapitulasi Rencana & Realisasi Kerja")
@@ -846,8 +847,13 @@ elif active_menu == "Rencana Kerja":
               "Tanggal Rencana Kerja",
               "Tanggal Mulai Bekerja",
               "Tanggal Selesai Kerja",
+              "Rencana Tenaga Kerja",
               "Rencana Produktivitas",
+              "Rencana Alat Berat",
+              "Actual Operator",
+              "Actual Tenaga Kerja",
               "Actual Produktivitas",
+              "Produktivitas Sampai Hari ini",
               "Sisa luas belum dikerjakan",
               "Rincian",
           ]],
