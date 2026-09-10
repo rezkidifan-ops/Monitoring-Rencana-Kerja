@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
@@ -791,7 +791,7 @@ elif active_menu == "Jadwal Kerja Selanjutnya":
       target_idx = options_spk[selected_label]
 
       with st.form("form_update_spk_user"):
-        input_spk_baru = st.text_input(
+        input_spkan_baru = st.text_input(
             "Nomor SPK Baru", placeholder="Contoh: SPK/EUC/2026/001"
         )
         btn_spk_submit = st.form_submit_button(
@@ -799,10 +799,10 @@ elif active_menu == "Jadwal Kerja Selanjutnya":
         )
 
         if btn_spk_submit:
-          if not input_spk_baru.strip():
+          if not input_spkan_baru.strip():
             st.error("Nomor SPK tidak boleh kosong.")
           else:
-            df.at[target_idx, "SPK"] = input_spk_baru.strip()
+            df.at[target_idx, "SPK"] = input_spkan_baru.strip()
             safe_gsheets_update("Sheet1", df)
             st.success("Nomor SPK berhasil diperbarui.")
             st.rerun()
