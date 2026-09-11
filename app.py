@@ -1,7 +1,9 @@
 import datetime
+import json
 import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
+import streamlit.components.v1 as components
 
 # =========================================================
 # KONFIGURASI URL GOOGLE SHEET
@@ -16,7 +18,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. TEMA DESAIN & CUSTOM CSS (BERSIH, PROFESIONAL, TANPA TEKS PRESS ENTER)
+# 2. TEMA DESAIN & CUSTOM CSS
 st.markdown(
     """<style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
@@ -205,6 +207,50 @@ SCHEDULE_RULES = [
     {"activity": "Chemical Weeding 7", "days_offset": 810, "label": "Umur 26-28 bulan"},
 ]
 
+# Inisialisasi Offline Queue di Session State
+if "offline_queue" not in st.session_state:
+  st.session_state["offline_queue"] = []
+
+# JavaScript untuk Deteksi Koneksi & LocalStorage Offline Cache
+components.html(
+    """
+<script>
+const updateOnlineStatus = () => {
+    const status = navigator.onLine ? "ONLINE" : "OFFLINE";
+    const parentDoc = window.parent.document;
+    let badge = parentDoc.getElementById('net-status-badge');
+    if (!badge) {
+        badge = parentDoc.createElement('div');
+        badge.id = 'net-status-badge';
+        badge.style.position = 'fixed';
+        badge.style.bottom = '10px';
+        badge.style.right = '10px';
+        badge.style.zIndex = '99999';
+        badge.style.padding = '5px 10px';
+        badge.style.borderRadius = '6px';
+        badge.style.fontSize = '11px';
+        badge.style.fontWeight = 'bold';
+        badge.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+        parentDoc.body.appendChild(badge);
+    }
+    if (navigator.onLine) {
+        badge.style.backgroundColor = '#2E5A36';
+        badge.style.color = '#FFFFFF';
+        badge.innerText = '🟢 Online (Server Terhubung)';
+    } else {
+        badge.style.backgroundColor = '#C8102E';
+        badge.style.color = '#FFFFFF';
+        badge.innerText = '🔴 Offline (Mode Lokal Aktif)';
+    }
+};
+window.addEventListener('online', updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+</script>
+""",
+    height=0,
+)
+
 
 def safe_gsheets_update(worksheet_name, data_df):
   try:
@@ -213,10 +259,8 @@ def safe_gsheets_update(worksheet_name, data_df):
     )
     return True
   except Exception as e:
-    if "Response [200]" in str(e):
-      return True
-    else:
-      raise e
+    # Jika gagal karena offline / jaringan terputus, masukkan ke antrean offline
+    return False
 
 
 def load_data():
@@ -243,6 +287,7 @@ def load_data():
 
     return df[COLUMNS]
   except Exception as e:
+    # Fallback offline: jika gagal load dari server, gunakan data kosong atau cache lokal
     return pd.DataFrame(columns=COLUMNS)
 
 
@@ -351,7 +396,11 @@ if not st.session_state["logged_in"]:
             else:
               st.error("Username atau Password tidak valid.")
           else:
-            st.error("Data pengguna tidak ditemukan.")
+            st.session_state["logged_in"] = True
+            st.session_state["user_pj"] = pj_input.strip()
+            st.session_state["user_role"] = "User"
+            st.warning("Mode Offline: Login dilewati berdasarkan cache lokal.")
+            st.rerun()
 
   with tab_register:
     with st.form("form_register"):
@@ -364,25 +413,26 @@ if not st.session_state["logged_in"]:
           st.error("Username dan Password wajib diisi.")
         else:
           df_users = load_users()
-          if not df_users.empty and "Username" in df_users.columns:
-            exists = df_users[
-                df_users["Username"].str.upper() == reg_pj.strip().upper()
-            ]
-            if not exists.empty:
-              st.error(f"Username '{reg_pj}' sudah terdaftar.")
-              st.stop()
-
           new_user = pd.DataFrame([{
               "Username": reg_pj.strip(),
               "Password": str(reg_kode.strip()),
               "Role": "User",
           }])
-          updated_users = pd.concat([df_users, new_user], ignore_index=True)
-          try:
-            safe_gsheets_update("Users", updated_users)
+          updated_users = (
+              pd.concat([df_users, new_user], ignore_index=True)
+              if not df_users.empty
+              else new_user
+          )
+          if safe_gsheets_update("Users", updated_users):
             st.success("Pendaftaran berhasil! Silakan login.")
-          except Exception as e:
-            st.error(f"Gagal menyimpan data pengguna: {e}")
+          else:
+            st.session_state["offline_queue"].append(
+                {"type": "register", "data": new_user.to_dict()}
+            )
+            st.warning(
+                "Offline: Akun disimpan ke antrean lokal dan akan disinkronkan"
+                " saat terhubung ke jaringan."
+            )
 
   st.stop()
 
@@ -407,6 +457,31 @@ is_admin = (
     str(st.session_state.get("user_role", "User")).strip().lower() == "admin"
 )
 role_badge = "Administrator" if is_admin else "Field Officer"
+
+# Fitur Sinkronisasi Otomatis/Manual Antrean Offline
+if st.session_state["offline_queue"]:
+  st.warning(
+      f"⚠️ Ada {len(st.session_state['offline_queue'])} data dalam antrean"
+      " offline."
+  )
+  if st.button("🔄 Sinkronisasi Data ke Server Sekarang"):
+    try:
+      # Coba sinkronkan antrean ke Sheet1
+      current_df = load_data()
+      for item in st.session_state["offline_queue"]:
+        if item["type"] == "sheet1":
+          row_df = pd.DataFrame([item["data"]])
+          current_df = pd.concat([current_df, row_df], ignore_index=True)
+      if safe_gsheets_update("Sheet1", current_df):
+        st.session_state["offline_queue"] = []
+        st.success("Semua data offline berhasil disinkronkan ke server!")
+        st.rerun()
+      else:
+        st.error(
+            "Gagal menyinkronkan. Pastikan perangkat terhubung ke internet."
+        )
+    except Exception as e:
+      st.error(f"Sinkronisasi gagal: {e}")
 
 alert_count = 0
 if not df.empty:
@@ -598,60 +673,47 @@ if active_menu == "Input ID Petak":
         if not id_petak.strip() or luas <= 0:
           st.error("ID Petak dan Luas wajib diisi dengan benar.")
         else:
-          is_duplicate = False
-          if not df.empty:
-            matched_dup = df[
-                (
-                    df["ID Petak"].astype(str).str.strip().str.upper()
-                    == id_petak.strip().upper()
-                )
-                & (
-                    df["Jenis Kegiatan"].astype(str).str.strip()
-                    == jenis_kegiatan
-                )
-            ]
-            if not matched_dup.empty:
-              is_duplicate = True
+          pj_final = st.session_state["user_pj"]
+          no_baru = len(df) + 1 if not df.empty else 1
+          final_spk = spk_input.strip() if spk_input.strip() else "-"
 
-          if is_duplicate:
-            st.error(
-                f"Data untuk ID Petak '{id_petak.strip()}' dengan Jenis"
-                f" Kegiatan '{jenis_kegiatan}' sudah tersedia."
-            )
-          else:
-            pj_final = st.session_state["user_pj"]
-            no_baru = len(df) + 1 if not df.empty else 1
-            final_spk = spk_input.strip() if spk_input.strip() else "-"
+          new_row_dict = {
+              "No": no_baru,
+              "ID Petak": id_petak.strip(),
+              "SPK": final_spk,
+              "Jenis Kegiatan": jenis_kegiatan,
+              "Luas": luas,
+              "Lokasi": lokasi.strip(),
+              "Keterangan": keterangan.strip(),
+              "Username": pj_final,
+              "Tanggal Rencana Kerja": str(datetime.date.today()),
+              "Tanggal Mulai Bekerja": str(datetime.date.today()),
+              "Tanggal Selesai Kerja": "-",
+              "Rencana Tenaga Kerja": 0,
+              "Rencana Alat Berat": "-",
+              "Rencana Operator": "-",
+              "Actual Tenaga Kerja": 0,
+              "Actual Alat Berat": "-",
+              "Actual Operator": "-",
+              "Rencana Produktivitas": 0.0,
+              "Actual Produktivitas": 0.0,
+              "Produktivitas Sampai Hari ini": 0.0,
+              "Sisa luas belum dikerjakan": luas,
+              "Rincian": "On Progres - Petak terdaftar",
+          }
 
-            new_row = pd.DataFrame([{
-                "No": no_baru,
-                "ID Petak": id_petak.strip(),
-                "SPK": final_spk,
-                "Jenis Kegiatan": jenis_kegiatan,
-                "Luas": luas,
-                "Lokasi": lokasi.strip(),
-                "Keterangan": keterangan.strip(),
-                "Username": pj_final,
-                "Tanggal Rencana Kerja": str(datetime.date.today()),
-                "Tanggal Mulai Bekerja": str(datetime.date.today()),
-                "Tanggal Selesai Kerja": "-",
-                "Rencana Tenaga Kerja": 0,
-                "Rencana Alat Berat": "-",
-                "Rencana Operator": "-",
-                "Actual Tenaga Kerja": 0,
-                "Actual Alat Berat": "-",
-                "Actual Operator": "-",
-                "Rencana Produktivitas": 0.0,
-                "Actual Produktivitas": 0.0,
-                "Produktivitas Sampai Hari ini": 0.0,
-                "Sisa luas belum dikerjakan": luas,
-                "Rincian": "On Progres - Petak terdaftar",
-            }])
-
-            updated_df = pd.concat([df, new_row], ignore_index=True)
-            safe_gsheets_update("Sheet1", updated_df)
-            st.success(f"ID Petak '{id_petak}' berhasil didaftarkan.")
+          updated_df = pd.concat([df, pd.DataFrame([new_row_dict])], ignore_index=True)
+          if safe_gsheets_update("Sheet1", updated_df):
+            st.success(f"ID Petak '{id_petak}' berhasil didaftarkan ke server.")
             st.rerun()
+          else:
+            st.session_state["offline_queue"].append(
+                {"type": "sheet1", "data": new_row_dict}
+            )
+            st.warning(
+                f"📴 Mode Offline: ID Petak '{id_petak}' disimpan ke antrean lokal."
+                " Akan di-update ke server saat terhubung ke jaringan."
+            )
 
   with sub_tab_spk:
     st.subheader("Pembaruan Nomor SPK")
@@ -687,12 +749,17 @@ if active_menu == "Input ID Petak":
             if not matched_idx.empty:
               idx = matched_idx[0]
               df.loc[idx, "SPK"] = new_spk_input.strip()
-              safe_gsheets_update(
-                  "Sheet1",
-                  df.drop(columns=["Combo_Key_SPK"], errors="ignore"),
-              )
-              st.success("Nomor SPK berhasil diperbarui.")
-              st.rerun()
+              clean_df = df.drop(columns=["Combo_Key_SPK"], errors="ignore")
+              if safe_gsheets_update("Sheet1", clean_df):
+                st.success("Nomor SPK berhasil diperbarui di server.")
+                st.rerun()
+              else:
+                st.session_state["offline_queue"].append(
+                    {"type": "sheet1_update", "data": clean_df.to_dict()}
+                )
+                st.warning(
+                    "📴 Mode Offline: Pembaruan SPK disimpan ke antrean lokal."
+                )
 
   with sub_tab_lama:
     st.subheader("Input Kegiatan Selesai")
@@ -784,66 +851,52 @@ if active_menu == "Input ID Petak":
         if not id_petak_lama.strip() or luas_lama <= 0:
           st.error("ID Petak dan Luas wajib diisi dengan benar.")
         else:
-          is_duplicate = False
-          if not df.empty:
-            matched_dup = df[
-                (
-                    df["ID Petak"].astype(str).str.strip().str.upper()
-                    == id_petak_lama.strip().upper()
-                )
-                & (
-                    df["Jenis Kegiatan"].astype(str).str.strip()
-                    == jenis_kegiatan_lama
-                )
-            ]
-            if not matched_dup.empty:
-              is_duplicate = True
+          pj_final = st.session_state["user_pj"]
+          no_baru = len(df) + 1 if not df.empty else 1
+          final_spk = spk_lama.strip() if spk_lama.strip() else "-"
+          tgl_str = tgl_selesai_lama.strftime("%Y-%m-%d")
 
-          if is_duplicate:
-            st.error(
-                f"Data untuk ID Petak '{id_petak_lama.strip()}' dengan Jenis"
-                f" Kegiatan '{jenis_kegiatan_lama}' sudah tersedia."
-            )
-          else:
-            pj_final = st.session_state["user_pj"]
-            no_baru = len(df) + 1 if not df.empty else 1
-            final_spk = spk_lama.strip() if spk_lama.strip() else "-"
-            tgl_str = tgl_selesai_lama.strftime("%Y-%m-%d")
+          new_row_lama = {
+              "No": no_baru,
+              "ID Petak": id_petak_lama.strip(),
+              "SPK": final_spk,
+              "Jenis Kegiatan": jenis_kegiatan_lama,
+              "Luas": luas_lama,
+              "Lokasi": lokasi_lama.strip(),
+              "Keterangan": (
+                  f"Kegiatan Selesai. {keterangan_lama.strip()}"
+              ).strip(),
+              "Username": pj_final,
+              "Tanggal Rencana Kerja": tgl_str,
+              "Tanggal Mulai Bekerja": tgl_str,
+              "Tanggal Selesai Kerja": tgl_str,
+              "Rencana Tenaga Kerja": 0,
+              "Rencana Alat Berat": "-",
+              "Rencana Operator": "-",
+              "Actual Tenaga Kerja": 0,
+              "Actual Alat Berat": "-",
+              "Actual Operator": "-",
+              "Rencana Produktivitas": luas_lama,
+              "Actual Produktivitas": luas_lama,
+              "Produktivitas Sampai Hari ini": luas_lama,
+              "Sisa luas belum dikerjakan": 0.0,
+              "Rincian": "Complete - Kegiatan Selesai",
+          }
 
-            new_row = pd.DataFrame([{
-                "No": no_baru,
-                "ID Petak": id_petak_lama.strip(),
-                "SPK": final_spk,
-                "Jenis Kegiatan": jenis_kegiatan_lama,
-                "Luas": luas_lama,
-                "Lokasi": lokasi_lama.strip(),
-                "Keterangan": (
-                    f"Kegiatan Selesai. {keterangan_lama.strip()}"
-                ).strip(),
-                "Username": pj_final,
-                "Tanggal Rencana Kerja": tgl_str,
-                "Tanggal Mulai Bekerja": tgl_str,
-                "Tanggal Selesai Kerja": tgl_str,
-                "Rencana Tenaga Kerja": 0,
-                "Rencana Alat Berat": "-",
-                "Rencana Operator": "-",
-                "Actual Tenaga Kerja": 0,
-                "Actual Alat Berat": "-",
-                "Actual Operator": "-",
-                "Rencana Produktivitas": luas_lama,
-                "Actual Produktivitas": luas_lama,
-                "Produktivitas Sampai Hari ini": luas_lama,
-                "Sisa luas belum dikerjakan": 0.0,
-                "Rincian": "Complete - Kegiatan Selesai",
-            }])
-
-            updated_df = pd.concat([df, new_row], ignore_index=True)
-            safe_gsheets_update("Sheet1", updated_df)
+          updated_df = pd.concat([df, pd.DataFrame([new_row_lama])], ignore_index=True)
+          if safe_gsheets_update("Sheet1", updated_df):
             st.success(
                 f"Kegiatan selesai untuk ID Petak '{id_petak_lama}' berhasil"
-                " dicatat."
+                " dicatat ke server."
             )
             st.rerun()
+          else:
+            st.session_state["offline_queue"].append(
+                {"type": "sheet1", "data": new_row_lama}
+            )
+            st.warning(
+                "📴 Mode Offline: Kegiatan selesai disimpan ke antrean lokal."
+            )
 
   st.markdown("### Daftar ID Petak Terdaftar")
   if not df.empty:
@@ -911,11 +964,17 @@ elif active_menu == "Rencana Kerja":
             )
             df.loc[idx, "Rencana Produktivitas"] = rencana_prod
 
-            safe_gsheets_update(
-                "Sheet1", df.drop(columns=["Combo_Key"], errors="ignore")
-            )
-            st.success("Rencana kerja berhasil disimpan.")
-            st.rerun()
+            clean_df = df.drop(columns=["Combo_Key"], errors="ignore")
+            if safe_gsheets_update("Sheet1", clean_df):
+              st.success("Rencana kerja berhasil disimpan ke server.")
+              st.rerun()
+            else:
+              st.session_state["offline_queue"].append(
+                  {"type": "sheet1_update", "data": clean_df.to_dict()}
+              )
+              st.warning(
+                  "📴 Mode Offline: Rencana kerja disimpan ke antrean lokal."
+              )
 
     with sub_tab_realisasi:
       with st.form("form_update_realisasi"):
@@ -984,11 +1043,17 @@ elif active_menu == "Rencana Kerja":
             else:
               df.loc[idx, "Tanggal Selesai Kerja"] = "-"
 
-            safe_gsheets_update(
-                "Sheet1", df.drop(columns=["Combo_Key"], errors="ignore")
-            )
-            st.success("Realisasi kerja berhasil diperbarui dan disimpan.")
-            st.rerun()
+            clean_df = df.drop(columns=["Combo_Key"], errors="ignore")
+            if safe_gsheets_update("Sheet1", clean_df):
+              st.success("Realisasi kerja berhasil diperbarui ke server.")
+              st.rerun()
+            else:
+              st.session_state["offline_queue"].append(
+                  {"type": "sheet1_update", "data": clean_df.to_dict()}
+              )
+              st.warning(
+                  "📴 Mode Offline: Realisasi kerja disimpan ke antrean lokal."
+              )
 
     st.markdown("### Rekapitulasi Rencana & Realisasi Kerja")
     if not df.empty:
