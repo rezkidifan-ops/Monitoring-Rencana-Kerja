@@ -31,10 +31,13 @@ footer,
 [data-testid="stHeaderActionElements"],
 [data-testid="stFooter"],
 div.viewerBadge_container__1QSob,
+div[class*="viewerBadge"],
 a[href*="streamlit.io/cloud"] {
     display: none !important;
     visibility: hidden !important;
     height: 0px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 [data-testid="InputInstructions"] {
