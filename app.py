@@ -523,7 +523,7 @@ if active_menu == "Input ID Petak":
       [
           "Formulir Pendaftaran ID Petak",
           "Update Nomor SPK",
-          "Input Kegiatan Lama Telah Selesai",
+          "Input Kegiatan Selesai",
       ]
   )
 
@@ -695,10 +695,10 @@ if active_menu == "Input ID Petak":
               st.rerun()
 
   with sub_tab_lama:
-    st.subheader("Input Kegiatan Lama Telah Selesai")
+    st.subheader("Input Kegiatan Selesai")
     st.write(
-        "Gunakan formulir ini untuk mencatat kegiatan yang sudah ada dan selesai"
-        " sebelum aplikasi ini dibuat."
+        "Gunakan formulir ini untuk mencatat kegiatan yang sudah ada dan"
+        " selesai."
     )
 
     with st.form("form_input_kegiatan_lama", clear_on_submit=True):
@@ -706,13 +706,13 @@ if active_menu == "Input ID Petak":
 
       with col_l1:
         id_petak_lama = st.text_input(
-            "ID Petak (Kegiatan Lama)", placeholder="Contoh: URUC031305"
+            "ID Petak", placeholder="Contoh: URUC031305"
         )
         spk_lama = st.text_input(
             "Nomor SPK (Opsional)", placeholder="Contoh: 23542638253"
         )
         jenis_kegiatan_lama = st.selectbox(
-            "Jenis Kegiatan (Lama)",
+            "Jenis Kegiatan",
             [
                 "Established - PLTB",
                 "Established - Kuku Macan",
@@ -758,17 +758,17 @@ if active_menu == "Input ID Petak":
             key="sel_lama",
         )
         luas_lama = st.number_input(
-            "Luas Area (Ha) [Lama]", min_value=0.0, step=0.1, key="luas_lama"
+            "Luas Area (Ha)", min_value=0.0, step=0.1, key="luas_lama"
         )
 
       with col_l2:
         lokasi_lama = st.text_input(
-            "Lokasi / Wilayah (Lama)",
+            "Lokasi / Wilayah",
             placeholder="Contoh: Sektor Utara",
             key="lok_lama",
         )
         tgl_selesai_lama = st.date_input(
-            "Tanggal Selesai Kegiatan (Sebelumnya)",
+            "Tanggal Selesai Kegiatan",
             value=datetime.date.today(),
             key="tgl_lama",
         )
@@ -777,7 +777,7 @@ if active_menu == "Input ID Petak":
         )
 
       submitted_lama = st.form_submit_button(
-          "Simpan Kegiatan Lama", use_container_width=True
+          "Simpan Kegiatan Selesai", use_container_width=True
       )
 
       if submitted_lama:
@@ -818,7 +818,7 @@ if active_menu == "Input ID Petak":
                 "Luas": luas_lama,
                 "Lokasi": lokasi_lama.strip(),
                 "Keterangan": (
-                    f"Kegiatan Lama/Sebelumnya. {keterangan_lama.strip()}"
+                    f"Kegiatan Selesai. {keterangan_lama.strip()}"
                 ).strip(),
                 "Username": pj_final,
                 "Tanggal Rencana Kerja": tgl_str,
@@ -834,14 +834,14 @@ if active_menu == "Input ID Petak":
                 "Actual Produktivitas": luas_lama,
                 "Produktivitas Sampai Hari ini": luas_lama,
                 "Sisa luas belum dikerjakan": 0.0,
-                "Rincian": "Complete - Kegiatan Lama Telah Selesai",
+                "Rincian": "Complete - Kegiatan Selesai",
             }])
 
             updated_df = pd.concat([df, new_row], ignore_index=True)
             safe_gsheets_update("Sheet1", updated_df)
             st.success(
-                f"Kegiatan lama untuk ID Petak '{id_petak_lama}' berhasil dicatat"
-                " sebagai selesai."
+                f"Kegiatan selesai untuk ID Petak '{id_petak_lama}' berhasil"
+                " dicatat."
             )
             st.rerun()
 
