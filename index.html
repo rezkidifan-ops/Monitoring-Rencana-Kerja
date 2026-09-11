@@ -5,209 +5,519 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eucasystem Monitoring</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
             font-family: 'Inter', sans-serif, -apple-system;
             background: linear-gradient(180deg, #F4F7F4 0%, #E9EFE9 100%);
-            margin: 0; padding: 15px;
-            color: #333;
+            margin: 0; padding: 12px; color: #333; font-size: 13px;
         }
-        .banner {
+        .intro-banner-eucalyptus {
             background: linear-gradient(135deg, #1B3B22 0%, #2E5A36 60%, #990000 100%);
-            color: white; padding: 15px; border-radius: 12px;
-            border-bottom: 3px solid #C8102E; margin-bottom: 20px;
+            color: #FFFFFF; padding: 15px; border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(46, 90, 54, 0.15);
+            margin-bottom: 15px; border-bottom: 3px solid #C8102E;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .badge {
-            background: #C8102E; font-size: 10px; font-weight: bold;
-            padding: 3px 8px; border-radius: 10px; text-transform: uppercase;
+        .motto-badge-red {
+            display: inline-block; background: #C8102E; color: #FFFFFF;
+            font-weight: 700; font-size: 10px; padding: 3px 8px;
+            border-radius: 12px; text-transform: uppercase; margin-bottom: 5px;
         }
         .card {
-            background: white; padding: 20px; border-radius: 10px;
+            background: white; padding: 15px; border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 15px;
         }
         input, select, textarea, button {
             width: 100%; padding: 10px; margin: 6px 0 12px 0;
-            border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
-            font-size: 14px;
+            border: 1px solid rgba(46, 90, 54, 0.2); border-radius: 6px;
+            box-sizing: border-box; font-size: 13px; font-family: 'Inter', sans-serif;
         }
         button {
-            background: #2E5A36; color: white; font-weight: bold; border: none; cursor: pointer;
+            background: #2E5A36; color: white; font-weight: 600; cursor: pointer; border: none;
         }
         button:hover { background: #1B3B22; }
-        table {
-            width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px;
-        }
-        th, td {
-            border: 1px solid #ddd; padding: 8px; text-align: left;
-        }
+        .btn-secondary { background: #C8102E; }
+        .btn-secondary:hover { background: #990000; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #2E5A36; color: white; }
         .hidden { display: none; }
-        .flex-row { display: flex; gap: 10px; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn { flex: 1; padding: 8px; background: #e0e6e1; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; color: #333; }
+        .tab-btn.active { background: #2E5A36; color: white; }
+        .menu-nav { display: flex; gap: 8px; margin-bottom: 15px; }
+        .menu-nav button { flex: 1; background: #4A6B52; font-size: 12px; }
+        .menu-nav button.active { background: #1B3B22; border: 2px solid #C8102E; }
     </style>
 </head>
 <body>
 
-    <div class="banner">
-        <span class="badge">WE CARE • WE DO • WE WIN</span>
-        <h2 style="margin: 5px 0 0 0;">Eucasystem Monitoring</h2>
-        <p style="margin: 2px 0 0 0; font-size: 12px;">DISTRIK PULAU PUSAT</p>
+    <div class="intro-banner-eucalyptus">
+        <div>
+            <span class="motto-badge-red">WE CARE • WE DO • WE WIN</span>
+            <h2 style="margin: 0; font-size: 1.15rem;">Eucasystem Monitoring</h2>
+            <p style="margin: 3px 0 0 0; font-size: 0.78rem;">DISTRIK PULAU PUSAT</p>
+            <div id="user-info-banner" class="hidden" style="margin-top: 5px; font-size: 11.5px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px;"></div>
+        </div>
     </div>
 
-    <div id="login-section" class="card">
-        <h3>Login Aplikasi</h3>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="handleLogin()">Masuk</button>
+    <div id="auth-section" class="card">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchAuthTab('login')">Login</button>
+            <button class="tab-btn" onclick="switchAuthTab('register')">Daftar</button>
+        </div>
+
+        <div id="login-tab">
+            <h3>Masuk Akun</h3>
+            <input type="text" id="login-user" placeholder="Username">
+            <input type="password" id="login-pass" placeholder="Password">
+            <button onclick="handleLogin()">Masuk</button>
+        </div>
+
+        <div id="register-tab" class="hidden">
+            <h3>Daftar Akun Baru</h3>
+            <input type="text" id="reg-user" placeholder="Username (Contoh: Rezki Difan)">
+            <input type="password" id="reg-pass" placeholder="Password (Min. 4 karakter)">
+            <button onclick="handleRegister()">Daftar Akun</button>
+        </div>
     </div>
 
-    <div id="dashboard-section" class="card hidden">
-        <h3>Halo, <span id="user-display"></span></h3>
-        <p style="font-size: 13px; color: #666;">Sistem Monitoring Operasional Lapangan</p>
-        <button style="background: #C8102E; margin-bottom: 20px;" onclick="handleLogout()">Keluar Aplikasi</button>
+    <div id="dashboard-section" class="hidden">
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <button id="alert-btn" onclick="toggleAlert()" style="background: #C8102E; flex: 1;">Alert (0)</button>
+            <button class="btn-secondary" onclick="handleLogout()" style="flex: 1;">Keluar</button>
+        </div>
 
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+        <div id="alert-panel" class="card hidden" style="border-left: 4px solid #C8102E; background: #1e1e1e; color: white;">
+            <h3>🚨 Alert: Petak Belum Memiliki SPK</h3>
+            <p style="font-size: 12px; color: #ccc;">Daftar ID Petak yang nomor SPK-nya masih kosong:</p>
+            <div id="alert-table-container" style="overflow-x: auto;"></div>
+        </div>
 
-        <h3>Input Data Baru</h3>
-        <form id="monitoring-form" onsubmit="handleSubmit(event)">
-            <label>Tanggal:</label>
-            <input type="date" id="tgl" required>
+        <div class="menu-nav">
+            <button id="menu-btn-1" class="active" onclick="switchMenu('input')">Input ID Petak</button>
+            <button id="menu-btn-2" onclick="switchMenu('rencana')">Rencana Kerja</button>
+            <button id="menu-btn-3" onclick="switchMenu('monitoring')">Monitoring</button>
+        </div>
+
+        <div id="menu-input" class="card">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchInputSub('reg')">Pendaftaran Petak</button>
+                <button class="tab-btn" onclick="switchInputSub('spk')">Update SPK</button>
+                <button class="tab-btn" onclick="switchInputSub('lama')">Kegiatan Selesai</button>
+            </div>
+
+            <div id="sub-reg">
+                <h3>Formulir Pendaftaran ID Petak</h3>
+                <input type="text" id="in-idpetak" placeholder="ID Petak (Contoh: URUC031305)">
+                <input type="text" id="in-spk" placeholder="Nomor SPK (Opsional)">
+                <label>Jenis Kegiatan:</label>
+                <select id="in-jeniskegiatan">
+                    <option>Established - PLTB</option>
+                    <option>Established - Kuku Macan</option>
+                    <option>Established - Tanam</option>
+                    <option>Established - Tanam & Aquasorb</option>
+                    <option>Established - Sulam</option>
+                    <option>Pupuk</option>
+                    <option>Sulam</option>
+                    <option>Manual Weeding 1</option>
+                    <option>Chemical Weeding 1</option>
+                    <option>Pupuk Susulan 1</option>
+                    <option>Lainnya</option>
+                </select>
+                <input type="number" id="in-luas" placeholder="Luas Area (Ha)" step="0.1" min="0">
+                <input type="text" id="in-lokasi" placeholder="Lokasi / Wilayah (Contoh: Sektor Utara)">
+                <textarea id="in-ket" placeholder="Keterangan Tambahan" rows="3"></textarea>
+                <button onclick="submitPetakBaru()">Simpan ID Petak</button>
+            </div>
+
+            <div id="sub-spk" class="hidden">
+                <h3>Pembaruan Nomor SPK</h3>
+                <label>Pilih Petak & Kegiatan:</label>
+                <select id="spk-select-combo"></select>
+                <input type="text" id="new-spk-val" placeholder="Nomor SPK Baru">
+                <button onclick="submitUpdateSPK()">Simpan Pembaruan SPK</button>
+            </div>
+
+            <div id="sub-lama" class="hidden">
+                <h3>Input Kegiatan Selesai</h3>
+                <input type="text" id="lama-idpetak" placeholder="ID Petak">
+                <input type="text" id="lama-spk" placeholder="Nomor SPK (Opsional)">
+                <label>Jenis Kegiatan:</label>
+                <select id="lama-jeniskegiatan">
+                    <option>Established - Tanam</option>
+                    <option>Established - Tanam & Aquasorb</option>
+                    <option>Pupuk</option>
+                    <option>Manual Weeding 1</option>
+                </select>
+                <input type="number" id="lama-luas" placeholder="Luas Area (Ha)" step="0.1" min="0">
+                <input type="text" id="lama-lokasi" placeholder="Lokasi / Wilayah">
+                <label>Tanggal Selesai:</label>
+                <input type="date" id="lama-tgl">
+                <textarea id="lama-ket" placeholder="Keterangan / Catatan" rows="3"></textarea>
+                <button onclick="submitKegiatanSelesai()">Simpan Kegiatan Selesai</button>
+            </div>
+
+            <hr style="margin: 20px 0;">
+            <h3>Daftar ID Petak Terdaftar</h3>
+            <div style="overflow-x: auto;"><table id="table-petak-list"><thead><tr><th>ID Petak</th><th>SPK</th><th>Kegiatan</th><th>Luas</th><th>Lokasi</th></tr></thead><tbody id="tbody-petak-list"></tbody></table></div>
+        </div>
+
+        <div id="menu-rencana" class="card hidden">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchRencanaSub('buat')">Buat Rencana</button>
+                <button class="tab-btn" onclick="switchRencanaSub('real')">Update Realisasi</button>
+            </div>
+
+            <div id="sub-buat-rencana">
+                <h3>Rencana Kerja Operasional</h3>
+                <label>Pilih Petak & Kegiatan:</label>
+                <select id="rencana-combo"></select>
+                <label>Tanggal Rencana Kerja:</label>
+                <input type="date" id="r-tgl">
+                <label>Tanggal Mulai Bekerja:</label>
+                <input type="date" id="r-mulai">
+                <input type="number" id="r-tk" placeholder="Rencana Tenaga Kerja (Orang)" min="0">
+                <input type="text" id="r-alat" placeholder="Rencana Alat Berat">
+                <input type="text" id="r-operator" placeholder="Rencana Operator">
+                <input type="number" id="r-prod" placeholder="Rencana Produktivitas (Ha)" step="0.1" min="0">
+                <button onclick="submitRencanaKerja()">Simpan Rencana Kerja</button>
+            </div>
+
+            <div id="sub-update-real" class="hidden">
+                <h3>Update Realisasi Kerja</h3>
+                <label>Pilih Petak & Kegiatan:</label>
+                <select id="real-combo"></select>
+                <input type="number" id="u-tk" placeholder="Aktual Tenaga Kerja (Orang)" min="0">
+                <input type="text" id="u-alat" placeholder="Aktual Alat Berat">
+                <input type="text" id="u-operator" placeholder="Aktual Operator">
+                <input type="number" id="u-prod" placeholder="Aktual Produktivitas (Ha)" step="0.1" min="0">
+                <textarea id="u-rincian" placeholder="Catatan Operasional / Rincian" rows="3"></textarea>
+                <button onclick="submitRealisasiKerja()">Simpan Update Realisasi</button>
+            </div>
+
+            <hr style="margin: 20px 0;">
+            <h3>Rekapitulasi Rencana & Realisasi</h3>
+            <div style="overflow-x: auto;"><table id="table-rekap"><thead><tr><th>ID Petak</th><th>SPK</th><th>Kegiatan</th><th>Rencana Prod</th><th>Aktual Prod</th><th>Sisa Luas</th><th>Status</th></tr></thead><tbody id="tbody-rekap"></tbody></table></div>
+        </div>
+
+        <div id="menu-monitoring" class="card hidden">
+            <h3>Monitoring Kegiatan & Reminder</h3>
+            <p style="font-size: 12px; color: #666;">Pemantauan kegiatan, SPK terdaftar, serta kalkulator reminder siklus tanaman eucalyptus secara real-time.</p>
             
-            <label>Lokasi / Blok:</label>
-            <input type="text" id="lokasi" placeholder="Contoh: Blok A1" required>
+            <h4>📋 Daftar Kegiatan Anda</h4>
+            <div style="overflow-x: auto;"><table id="table-mon-user"><thead><tr><th>ID Petak</th><th>SPK</th><th>Kegiatan</th><th>Sisa Luas</th><th>Status</th></tr></thead><tbody id="tbody-mon-user"></tbody></table></div>
 
-            <label>Aktivitas / Keterangan:</label>
-            <textarea id="keterangan" rows="3" placeholder="Deskripsi pekerjaan..." required></textarea>
-
-            <button type="submit" id="submit-btn">Kirim Data ke Sheets</button>
-        </form>
-
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-        <h3>Data Monitoring Terbaru</h3>
-        <button onclick="loadData()" style="background: #4A6B52; font-size: 12px; padding: 6px;">Muat Ulang Data</button>
-        <div style="overflow-x: auto;">
-            <table id="data-table">
-                <thead>
-                    <tr>
-                        <th>Tanggal</th>
-                        <th>Lokasi</th>
-                        <th>Keterangan</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body">
-                    <tr><td colspan="3" style="text-align: center;">Memuat data...</td></tr>
-                </tbody>
-            </table>
+            <h4 style="margin-top: 20px;">🔔 Kalkulator Reminder Kegiatan Selanjutnya</h4>
+            <div style="overflow-x: auto;"><table id="table-reminder"><thead><tr><th>ID Petak</th><th>Tgl Selesai Tanam</th><th>Umur Tanaman</th><th>Kegiatan Selanjutnya</th><th>Estimasi Tgl</th><th>Status</th></tr></thead><tbody id="tbody-reminder"></tbody></table></div>
         </div>
     </div>
 
     <script>
-        // Masukkan URL Google Apps Script Anda yang sudah aktif di sini
         const API_URL = "https://script.google.com/macros/s/AKfycby6R2LbXb09GwTYbqJTaX32DcM5TnCUinnyBtDwmOa9A1gtGTISwoVob9FngknYIkpA/exec";
+        
+        const SCHEDULE_RULES = [
+            {activity: "Pupuk", days_offset: 3, label: "Umur 0-7 hari"},
+            {activity: "Sulam", days_offset: 3, label: "Umur 0-7 hari"},
+            {activity: "Manual Weeding 1", days_offset: 30, label: "Umur 1 bulan"},
+            {activity: "Chemical Weeding 1", days_offset: 45, label: "Umur 1-2 bulan"},
+            {activity: "Pupuk Susulan 1", days_offset: 90, label: "Umur 3 bulan"},
+            {activity: "Chemical Weeding 2", days_offset: 135, label: "Umur 4-5 bulan"}
+        ];
+
+        let globalData = [];
+        let currentUser = localStorage.getItem("user_pj") || "";
+        let currentRole = localStorage.getItem("user_role") || "User";
+
+        window.onload = function() {
+            if(currentUser) {
+                showDashboard();
+            }
+        }
+
+        function switchAuthTab(tab) {
+            document.querySelectorAll('#auth-section .tab-btn').forEach(b => b.classList.remove('active'));
+            if(tab === 'login') {
+                event.target.classList.add('active');
+                document.getElementById('login-tab').classList.remove('hidden');
+                document.getElementById('register-tab').classList.add('hidden');
+            } else {
+                event.target.classList.add('active');
+                document.getElementById('register-tab').classList.remove('hidden');
+                document.getElementById('login-tab').classList.add('hidden');
+            }
+        }
 
         async function handleLogin() {
-            const user = document.getElementById('username').value.trim();
-            const pass = document.getElementById('password').value.trim();
-
-            if(!user || !pass) {
-                alert("Isi username dan password!");
-                return;
-            }
+            const u = document.getElementById('login-user').value.trim();
+            const p = document.getElementById('login-pass').value.trim();
+            if(!u || !p) { alert("Isi username dan password!"); return; }
 
             try {
-                let response = await fetch(API_URL + "?action=getUsers");
-                let users = await response.json();
+                let res = await fetch(API_URL + "?action=getUsers");
+                let users = await res.json();
+                let matched = users.find(x => x.Username && x.Username.toUpperCase() === u.toUpperCase() && x.Password == p);
                 
-                let valid = users.find(u => u.Username && u.Username.toUpperCase() === user.toUpperCase() && u.Password == pass);
-                if(valid || users.length === 0) {
-                    localStorage.setItem("user", user);
-                    showDashboard(user);
+                if(matched || users.length === 0) {
+                    currentUser = u;
+                    currentRole = matched ? (matched.Role || "User") : "User";
+                    localStorage.setItem("user_pj", currentUser);
+                    localStorage.setItem("user_role", currentRole);
+                    showDashboard();
                 } else {
                     alert("Username atau Password salah!");
                 }
-            } catch (err) {
-                // Bypass jika error koneksi awal agar tetap bisa masuk dashboard
-                localStorage.setItem("user", user);
-                showDashboard(user);
+            } catch(e) {
+                currentUser = u;
+                localStorage.setItem("user_pj", currentUser);
+                showDashboard();
             }
         }
 
-        function showDashboard(user) {
-            document.getElementById('login-section').classList.add('hidden');
-            document.getElementById('dashboard-section').classList.remove('hidden');
-            document.getElementById('user-display').innerText = user;
-            loadData();
+        async function handleRegister() {
+            const u = document.getElementById('reg-user').value.trim();
+            const p = document.getElementById('reg-pass').value.trim();
+            if(!u || !p) { alert("Isi username dan password!"); return; }
+
+            let payload = { type: "register", sheet: "Users", data: { Username: u, Password: p, Role: "User" }};
+            try {
+                await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                alert("Pendaftaran berhasil! Silakan login.");
+                switchAuthTab('login');
+            } catch(e) {
+                alert("Gagal mendaftar.");
+            }
         }
 
         function handleLogout() {
-            localStorage.removeItem("user");
+            localStorage.clear();
             location.reload();
         }
 
-        async function handleSubmit(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submit-btn');
-            btn.innerText = "Mengirim...";
-            btn.disabled = true;
+        async function showDashboard() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            document.getElementById('user-info-banner').classList.remove('hidden');
+            document.getElementById('user-info-banner').innerText = `${currentUser} | ${currentRole}`;
+            await loadAppData();
+        }
 
-            const tgl = document.getElementById('tgl').value;
-            const lokasi = document.getElementById('lokasi').value;
-            const keterangan = document.getElementById('keterangan').value;
-
-            // Urutan data disesuaikan dengan kolom di Sheet1 Anda [Tanggal, Lokasi, Keterangan]
-            const payload = {
-                sheet: "Sheet1",
-                type: "add",
-                data: [tgl, lokasi, keterangan]
-            };
-
+        async function loadAppData() {
             try {
-                await fetch(API_URL, {
-                    method: "POST",
-                    body: JSON.stringify(payload)
-                });
-                alert("Data berhasil disimpan ke Google Sheets!");
-                document.getElementById('monitoring-form').reset();
-                loadData();
-            } catch (err) {
-                alert("Gagal mengirim data.");
-            } finally {
-                btn.innerText = "Kirim Data ke Sheets";
-                btn.disabled = false;
+                let res = await fetch(API_URL);
+                globalData = await res.json();
+                renderAllData();
+            } catch(e) {
+                globalData = [];
             }
         }
 
-        async function loadData() {
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align: center;">Memuat data...</td></tr>`;
+        function switchMenu(menu) {
+            ['input', 'rencana', 'monitoring'].forEach(m => {
+                document.getElementById('menu-' + m).classList.add('hidden');
+                document.getElementById('menu-btn-' + (m==='input'?1:m==='rencana'?2:3)).classList.remove('active');
+            });
+            document.getElementById('menu-' + menu).classList.remove('hidden');
+            document.getElementById('menu-btn-' + (menu==='input'?1:menu==='rencana'?2:3)).classList.add('active');
+            if(menu === 'monitoring') renderMonitoring();
+        }
 
-            try {
-                let response = await fetch(API_URL);
-                let rows = await response.json();
+        function switchInputSub(sub) {
+            ['reg', 'spk', 'lama'].forEach(s => document.getElementById('sub-' + s).classList.add('hidden'));
+            document.getElementById('sub-' + sub).classList.remove('hidden');
+        }
 
-                tbody.innerHTML = "";
-                if(rows.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="3" style="text-align: center;">Belum ada data.</td></tr>`;
-                    return;
+        function switchRencanaSub(sub) {
+            ['buat-rencana', 'update-real'].forEach(s => document.getElementById('sub-' + s).classList.add('hidden'));
+            document.getElementById('sub-' + (sub==='buat'?'buat-rencana':'update-real')).classList.remove('hidden');
+        }
+
+        async function submitPetakBaru() {
+            const idp = document.getElementById('in-idpetak').value.trim();
+            const luas = parseFloat(document.getElementById('in-luas').value);
+            if(!idp || isNaN(luas) || luas <= 0) { alert("ID Petak dan Luas wajib diisi!"); return; }
+
+            const row = [
+                globalData.length + 1, idp, document.getElementById('in-spk').value.trim() || "-",
+                document.getElementById('in-jeniskegiatan').value, luas,
+                document.getElementById('in-lokasi').value.trim(), document.getElementById('in-ket').value.trim(),
+                currentUser, new Date().toISOString().split('T')[0], new Date().toISOString().split('T')[0], "-",
+                0, "-", "-", 0, "-", "-", 0.0, 0.0, 0.0, luas, "On Progres - Petak terdaftar"
+            ];
+
+            await sendPostAndReload({ type: "add", sheet: "Sheet1", data: row });
+        }
+
+        async function submitUpdateSPK() {
+            const combo = document.getElementById('spk-select-combo').value;
+            const newSpk = document.getElementById('new-spk-val').value.trim();
+            if(!newSpk) { alert("Nomor SPK baru kosong!"); return; }
+
+            let item = globalData.find(x => `ID: ${x["ID Petak"]} | Kegiatan: ${x["Jenis Kegiatan"]} (SPK: ${x["SPK"]})` === combo);
+            if(item) { item["SPK"] = newSpk; await saveAllDataToServer(); }
+        }
+
+        async function submitKegiatanSelesai() {
+            const idp = document.getElementById('lama-idpetak').value.trim();
+            const luas = parseFloat(document.getElementById('lama-luas').value);
+            const tgl = document.getElementById('lama-tgl').value;
+            if(!idp || isNaN(luas) || !tgl) { alert("Lengkapi data dengan benar!"); return; }
+
+            const row = [
+                globalData.length + 1, idp, document.getElementById('lama-spk').value.trim() || "-",
+                document.getElementById('lama-jeniskegiatan').value, luas,
+                document.getElementById('lama-lokasi').value.trim(), "Kegiatan Selesai. " + document.getElementById('lama-ket').value.trim(),
+                currentUser, tgl, tgl, tgl, 0, "-", "-", 0, "-", "-", luas, luas, luas, 0.0, "Complete - Kegiatan Selesai"
+            ];
+
+            await sendPostAndReload({ type: "add", sheet: "Sheet1", data: row });
+        }
+
+        async function submitRencanaKerja() {
+            const combo = document.getElementById('rencana-combo').value;
+            let item = globalData.find(x => `ID: ${x["ID Petak"]} | Kegiatan: ${x["Jenis Kegiatan"]}` === combo);
+            if(item) {
+                item["Tanggal Rencana Kerja"] = document.getElementById('r-tgl').value;
+                item["Tanggal Mulai Bekerja"] = document.getElementById('r-mulai').value;
+                item["Rencana Tenaga Kerja"] = parseInt(document.getElementById('r-tk').value) || 0;
+                item["Rencana Alat Berat"] = document.getElementById('r-alat').value.trim() || "-";
+                item["Rencana Operator"] = document.getElementById('r-operator').value.trim() || "-";
+                item["Rencana Produktivitas"] = parseFloat(document.getElementById('r-prod').value) || 0.0;
+                await saveAllDataToServer();
+            }
+        }
+
+        async function submitRealisasiKerja() {
+            const combo = document.getElementById('real-combo').value;
+            let item = globalData.find(x => `ID: ${x["ID Petak"]} | Kegiatan: ${x["Jenis Kegiatan"]}` === combo);
+            if(item) {
+                let luas = parseFloat(item["Luas"]) || 0;
+                let prevActual = parseFloat(item["Actual Produktivitas"]) || 0;
+                let addProd = parseFloat(document.getElementById('u-prod').value) || 0;
+                let kumulatif = prevActual + addProd;
+                let sisa = Math.max(0.0, luas - kumulatif);
+
+                item["Actual Tenaga Kerja"] = parseInt(document.getElementById('u-tk').value) || 0;
+                item["Actual Alat Berat"] = document.getElementById('u-alat').value.trim() || "-";
+                item["Actual Operator"] = document.getElementById('u-operator').value.trim() || "-";
+                item["Actual Produktivitas"] = kumulatif;
+                item["Produktivitas Sampai Hari ini"] = kumulatif;
+                item["Sisa luas belum dikerjakan"] = sisa;
+                item["Rincian"] = (sisa <= 0 ? "Complete" : "On Progres") + " - " + document.getElementById('u-rincian').value.trim();
+                if(sisa <= 0) item["Tanggal Selesai Kerja"] = new Date().toISOString().split('T')[0];
+
+                await saveAllDataToServer();
+            }
+        }
+
+        async function sendPostAndReload(payload) {
+            await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+            alert("Data berhasil disimpan!");
+            loadAppData();
+        }
+
+        async function saveAllDataToServer() {
+            let headers = [
+                "No", "ID Petak", "SPK", "Jenis Kegiatan", "Luas", "Lokasi", "Keterangan", "Username",
+                "Tanggal Rencana Kerja", "Tanggal Mulai Bekerja", "Tanggal Selesai Kerja", 
+                "Rencana Tenaga Kerja", "Rencana Alat Berat", "Rencana Operator", 
+                "Actual Tenaga Kerja", "Actual Alat Berat", "Actual Operator", 
+                "Rencana Produktivitas", "Actual Produktivitas", "Produktivitas Sampai Hari ini", 
+                "Sisa luas belum dikerjakan", "Rincian"
+            ];
+            let rows = [headers];
+            globalData.forEach(x => {
+                rows.push(headers.map(h => x[h] !== undefined ? x[h] : ""));
+            });
+
+            await fetch(API_URL, { method: "POST", body: JSON.stringify({ type: "update_all", sheet: "Sheet1", full_data: rows }) });
+            alert("Pembaruan berhasil disimpan ke server!");
+            loadAppData();
+        }
+
+        function renderAllData() {
+            let tbodyPetak = document.getElementById('tbody-petak-list');
+            let tbodyRekap = document.getElementById('tbody-rekap');
+            let spkCombo = document.getElementById('spk-select-combo');
+            let rencanaCombo = document.getElementById('rencana-combo');
+            let realCombo = document.getElementById('real-combo');
+
+            tbodyPetak.innerHTML = ""; tbodyRekap.innerHTML = "";
+            spkCombo.innerHTML = ""; rencanaCombo.innerHTML = ""; realCombo.innerHTML = "";
+
+            let alertCount = 0;
+            let alertHtml = "";
+
+            globalData.forEach(row => {
+                let spkVal = String(row["SPK"] || "").trim();
+                let isNoSpk = (!spkVal || spkVal === "-" || spkVal === "None" || spkVal === "nan");
+                let hasProd = (parseFloat(row["Actual Produktivitas"]) > 0 || row["Jenis Kegiatan"]);
+                if(isNoSpk && hasProd) {
+                    alertCount++;
+                    alertHtml += `<tr><td>${row["ID Petak"]}</td><td>${row["Jenis Kegiatan"]}</td><td>${row["Lokasi"]}</td></tr>`;
                 }
 
-                // Tampilkan data dari baris paling bawah (terbaru)
-                rows.reverse().forEach(row => {
-                    let tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${row.Tanggal || row[0] || ''}</td>
-                        <td>${row.Lokasi || row[1] || ''}</td>
-                        <td>${row.Keterangan || row[2] || ''}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: red;">Gagal memuat data</td></tr>`;
-            }
+                // Tabel Petak
+                tbodyPetak.innerHTML += `<tr><td>${row["ID Petak"]}</td><td>${row["SPK"]}</td><td>${row["Jenis Kegiatan"]}</td><td>${row["Luas"]}</td><td>${row["Lokasi"]}</td></tr>`;
+                
+                // Tabel Rekap
+                tbodyRekap.innerHTML += `<tr><td>${row["ID Petak"]}</td><td>${row["SPK"]}</td><td>${row["Jenis Kegiatan"]}</td><td>${row["Rencana Produktivitas"]}</td><td>${row["Actual Produktivitas"]}</td><td>${row["Sisa luas belum dikerjakan"]}</td><td>${row["Rincian"]}</td></tr>`;
+
+                // Comboboxes
+                let comboKeySPK = `ID: ${row["ID Petak"]} | Kegiatan: ${row["Jenis Kegiatan"]} (SPK: ${row["SPK"]})`;
+                spkCombo.innerHTML += `<option value="${comboKeySPK}">${comboKeySPK}</option>`;
+
+                let comboKeyR = `ID: ${row["ID Petak"]} | Kegiatan: ${row["Jenis Kegiatan"]}`;
+                rencanaCombo.innerHTML += `<option value="${comboKeyR}">${comboKeyR}</option>`;
+                realCombo.innerHTML += `<option value="${comboKeyR}">${comboKeyR}</option>`;
+            });
+
+            document.getElementById('alert-btn').innerText = `Alert (${alertCount})`;
+            document.getElementById('alert-table-container').innerHTML = alertCount > 0 ? `<table><thead><tr><th>ID Petak</th><th>Kegiatan</th><th>Lokasi</th></tr></thead><tbody>${alertHtml}</tbody></table>` : `<p>Tidak ada petak yang memerlukan perhatian SPK.</p>`;
         }
 
-        window.onload = function() {
-            let savedUser = localStorage.getItem("user");
-            if(savedUser) showDashboard(savedUser);
+        function toggleAlert() {
+            let panel = document.getElementById('alert-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        function renderMonitoring() {
+            let userRows = globalData.filter(x => String(x["Username"]).trim().toUpperCase() === currentUser.toUpperCase());
+            let tbodyMon = document.getElementById('tbody-mon-user');
+            tbodyMon.innerHTML = "";
+
+            userRows.forEach(r => {
+                tbodyMon.innerHTML += `<tr><td>${r["ID Petak"]}</td><td>${r["SPK"]}</td><td>${r["Jenis Kegiatan"]}</td><td>${r["Sisa luas belum dikerjakan"]}</td><td>${r["Rincian"]}</td></tr>`;
+            });
+
+            // Kalkulator Reminder
+            let tbodyRem = document.getElementById('tbody-reminder');
+            tbodyRem.innerHTML = "";
+            let uniquePetaks = [...new Set(userRows.map(x => x["ID Petak"]))];
+            let today = new Date();
+
+            uniquePetaks.forEach(petak => {
+                let pRows = globalData.filter(x => x["ID Petak"] == petak);
+                let tanamCompleted = pRows.find(x => (x["Jenis Kegiatan"] === "Established - Tanam" || x["Jenis Kegiatan"] === "Established - Tanam & Aquasorb") && parseFloat(x["Sisa luas belum dikerjakan"]) <= 0);
+                
+                if(!tanamCompleted) return;
+
+                let tSelesai = new Date(tanamCompleted["Tanggal Selesai Kerja"]);
+                let ageDays = Math.floor((today - tSelesai) / (1000 * 60 * 60 * 24));
+                let ageMonths = (ageDays / 30.44).toFixed(1);
+
+                let completedActs = pRows.filter(x => parseFloat(x["Sisa luas belum dikerjakan"]) <= 0).map(x => x["Jenis Kegiatan"]);
+                let nextRule = SCHEDULE_RULES.find(rule => !completedActs.includes(rule.activity));
+
+                if(nextRule) {
+                    let targetDate = new Date(tSelesai);
+                    targetDate.setDate(targetDate.getDate() + nextRule.days_offset);
+                    let statusWaktu = today >= targetDate ? "Jadwal Tiba" : "Akan Datang";
+                    tbodyRem.innerHTML += `<tr><td>${petak}</td><td>${tanamCompleted["Tanggal Selesai Kerja"]}</td><td>${ageDays} Hari (~${ageMonths} Bln)</td><td>${nextRule.activity} (${nextRule.label})</td><td>${targetDate.toISOString().split('T')[0]}</td><td><b>${statusWaktu}</b></td></tr>`;
+                } else {
+                    tbodyRem.innerHTML += `<tr><td>${petak}</td><td>${tanamCompleted["Tanggal Selesai Kerja"]}</td><td>${ageDays} Hari (~${ageMonths} Bln)</td><td>Semua Selesai</td><td>-</td><td>Selesai</td></tr>`;
+                }
+            });
         }
     </script>
 </body>
