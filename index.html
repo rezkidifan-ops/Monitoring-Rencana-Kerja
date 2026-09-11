@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eucasystem Monitoring</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="theme-color" content="#2E5A36">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
@@ -16,7 +19,6 @@
             color: #FFFFFF; padding: 15px; border-radius: 12px;
             box-shadow: 0 4px 12px rgba(46, 90, 54, 0.15);
             margin-bottom: 15px; border-bottom: 3px solid #C8102E;
-            display: flex; justify-content: space-between; align-items: center;
         }
         .motto-badge-red {
             display: inline-block; background: #C8102E; color: #FFFFFF;
@@ -48,6 +50,18 @@
         .menu-nav { display: flex; gap: 8px; margin-bottom: 15px; }
         .menu-nav button { flex: 1; background: #4A6B52; font-size: 12px; }
         .menu-nav button.active { background: #1B3B22; border: 2px solid #C8102E; }
+        
+        /* Kotak Notifikasi Sukses Hijau */
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-weight: 500;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -69,6 +83,7 @@
 
         <div id="login-tab">
             <h3>Masuk Akun</h3>
+            <div id="login-msg"></div>
             <input type="text" id="login-user" placeholder="Username">
             <input type="password" id="login-pass" placeholder="Password">
             <button onclick="handleLogin()">Masuk</button>
@@ -76,6 +91,7 @@
 
         <div id="register-tab" class="hidden">
             <h3>Daftar Akun Baru</h3>
+            <div id="reg-msg"></div>
             <input type="text" id="reg-user" placeholder="Username (Contoh: Rezki Difan)">
             <input type="password" id="reg-pass" placeholder="Password (Min. 4 karakter)">
             <button onclick="handleRegister()">Daftar Akun</button>
@@ -83,6 +99,7 @@
     </div>
 
     <div id="dashboard-section" class="hidden">
+        <div id="dashboard-msg"></div>
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
             <button id="alert-btn" onclick="toggleAlert()" style="background: #C8102E; flex: 1;">Alert (0)</button>
             <button class="btn-secondary" onclick="handleLogout()" style="flex: 1;">Keluar</button>
@@ -231,7 +248,7 @@
 
         window.onload = function() {
             if(currentUser) {
-                showDashboard();
+                showDashboard(false);
             }
         }
 
@@ -251,6 +268,9 @@
         async function handleLogin() {
             const u = document.getElementById('login-user').value.trim();
             const p = document.getElementById('login-pass').value.trim();
+            const msgBox = document.getElementById('login-msg');
+            msgBox.innerHTML = "";
+
             if(!u || !p) { alert("Isi username dan password!"); return; }
 
             try {
@@ -263,29 +283,42 @@
                     currentRole = matched ? (matched.Role || "User") : "User";
                     localStorage.setItem("user_pj", currentUser);
                     localStorage.setItem("user_role", currentRole);
-                    showDashboard();
+                    
+                    msgBox.innerHTML = `<div class="alert-success">✔ Berhasil Login! Memuat dashboard...</div>`;
+                    setTimeout(() => showDashboard(true), 800);
                 } else {
                     alert("Username atau Password salah!");
                 }
             } catch(e) {
                 currentUser = u;
                 localStorage.setItem("user_pj", currentUser);
-                showDashboard();
+                msgBox.innerHTML = `<div class="alert-success">✔ Berhasil Masuk!</div>`;
+                setTimeout(() => showDashboard(true), 800);
             }
         }
 
         async function handleRegister() {
             const u = document.getElementById('reg-user').value.trim();
             const p = document.getElementById('reg-pass').value.trim();
+            const msgBox = document.getElementById('reg-msg');
+            msgBox.innerHTML = "";
+
             if(!u || !p) { alert("Isi username dan password!"); return; }
 
             let payload = { type: "register", sheet: "Users", data: { Username: u, Password: p, Role: "User" }};
             try {
-                await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
-                alert("Pendaftaran berhasil! Silakan login.");
-                switchAuthTab('login');
+                let response = await fetch(API_URL, { method: "POST", body: JSON.stringify(payload) });
+                let result = await response.json();
+                
+                if(result.status === "success") {
+                    msgBox.innerHTML = `<div class="alert-success">✔ Pendaftaran berhasil! Silakan pindah ke tab Login.</div>`;
+                    document.getElementById('reg-user').value = "";
+                    document.getElementById('reg-pass').value = "";
+                } else {
+                    alert(result.message || "Gagal mendaftar.");
+                }
             } catch(e) {
-                alert("Gagal mendaftar.");
+                alert("Gagal terhubung ke server.");
             }
         }
 
@@ -294,11 +327,16 @@
             location.reload();
         }
 
-        async function showDashboard() {
+        async function showDashboard(showWelcomeAlert = false) {
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.remove('hidden');
             document.getElementById('user-info-banner').classList.remove('hidden');
             document.getElementById('user-info-banner').innerText = `${currentUser} | ${currentRole}`;
+
+            if(showWelcomeAlert) {
+                document.getElementById('dashboard-msg').innerHTML = `<div class="alert-success">✔ Selamat datang, ${currentUser}! Berhasil masuk ke sistem.</div>`;
+            }
+
             await loadAppData();
         }
 
@@ -457,13 +495,9 @@
                     alertHtml += `<tr><td>${row["ID Petak"]}</td><td>${row["Jenis Kegiatan"]}</td><td>${row["Lokasi"]}</td></tr>`;
                 }
 
-                // Tabel Petak
                 tbodyPetak.innerHTML += `<tr><td>${row["ID Petak"]}</td><td>${row["SPK"]}</td><td>${row["Jenis Kegiatan"]}</td><td>${row["Luas"]}</td><td>${row["Lokasi"]}</td></tr>`;
-                
-                // Tabel Rekap
                 tbodyRekap.innerHTML += `<tr><td>${row["ID Petak"]}</td><td>${row["SPK"]}</td><td>${row["Jenis Kegiatan"]}</td><td>${row["Rencana Produktivitas"]}</td><td>${row["Actual Produktivitas"]}</td><td>${row["Sisa luas belum dikerjakan"]}</td><td>${row["Rincian"]}</td></tr>`;
 
-                // Comboboxes
                 let comboKeySPK = `ID: ${row["ID Petak"]} | Kegiatan: ${row["Jenis Kegiatan"]} (SPK: ${row["SPK"]})`;
                 spkCombo.innerHTML += `<option value="${comboKeySPK}">${comboKeySPK}</option>`;
 
@@ -490,7 +524,6 @@
                 tbodyMon.innerHTML += `<tr><td>${r["ID Petak"]}</td><td>${r["SPK"]}</td><td>${r["Jenis Kegiatan"]}</td><td>${r["Sisa luas belum dikerjakan"]}</td><td>${r["Rincian"]}</td></tr>`;
             });
 
-            // Kalkulator Reminder
             let tbodyRem = document.getElementById('tbody-reminder');
             tbodyRem.innerHTML = "";
             let uniquePetaks = [...new Set(userRows.map(x => x["ID Petak"]))];
