@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eucasystem Monitoring</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif, -apple-system;
+            background: linear-gradient(180deg, #F4F7F4 0%, #E9EFE9 100%);
+            margin: 0; padding: 15px;
+            color: #333;
+        }
+        .banner {
+            background: linear-gradient(135deg, #1B3B22 0%, #2E5A36 60%, #990000 100%);
+            color: white; padding: 15px; border-radius: 12px;
+            border-bottom: 3px solid #C8102E; margin-bottom: 20px;
+        }
+        .badge {
+            background: #C8102E; font-size: 10px; font-weight: bold;
+            padding: 3px 8px; border-radius: 10px; text-transform: uppercase;
+        }
+        .card {
+            background: white; padding: 20px; border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin-bottom: 15px;
+        }
+        input, select, button {
+            width: 100%; padding: 10px; margin: 8px 0 15px 0;
+            border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box;
+        }
+        button {
+            background: #2E5A36; color: white; font-weight: bold; border: none; cursor: pointer;
+        }
+        button:hover { background: #1B3B22; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="banner">
+        <span class="badge">WE CARE • WE DO • WE WIN</span>
+        <h2 style="margin: 5px 0 0 0;">Eucasystem Monitoring</h2>
+        <p style="margin: 2px 0 0 0; font-size: 12px;">DISTRIK PULAU PUSAT</p>
+    </div>
+
+    <!-- Form Login -->
+    <div id="login-section" class="card">
+        <h3>Login Aplikasi</h3>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="handleLogin()">Masuk</button>
+    </div>
+
+    <!-- Dashboard Utama (Setelah Login) -->
+    <div id="dashboard-section" class="card hidden">
+        <h3>Selamat Datang, <span id="user-display"></span></h3>
+        <p>Aplikasi mandiri terhubung langsung ke Google Sheets via GitHub Pages.</p>
+        <button style="background: #C8102E;" onclick="handleLogout()">Keluar</button>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycby6R2LbXb09GwTYbqJTaX32DcM5TnCUinnyBtDwmOa9A1gtGTISwoVob9FngknYIkpA/exec";
+
+        async function handleLogin() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            if(!user || !pass) {
+                alert("Isi username dan password!");
+                return;
+            }
+
+            try {
+                let response = await fetch(API_URL + "?action=getUsers");
+                let users = await response.json();
+                
+                let valid = users.find(u => u.Username.toUpperCase() === user.toUpperCase() && u.Password == pass);
+                if(valid || users.length === 0) {
+                    localStorage.setItem("user", user);
+                    showDashboard(user);
+                } else {
+                    alert("Username atau Password salah!");
+                }
+            } catch (err) {
+                alert("Gagal terhubung ke server database.");
+            }
+        }
+
+        function showDashboard(user) {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            document.getElementById('user-display').innerText = user;
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("user");
+            location.reload();
+        }
+
+        window.onload = function() {
+            let savedUser = localStorage.getItem("user");
+            if(savedUser) showDashboard(savedUser);
+        }
+    </script>
+</body>
+</html>
