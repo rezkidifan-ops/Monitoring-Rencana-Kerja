@@ -671,7 +671,7 @@ if active_menu == "Input ID Petak":
 
       with st.form("form_update_spk"):
         selected_combo_spk = st.selectbox(
-            "Pilih Petak & Jenis Kegiatan", list_combo_spk
+            "🔍 Pilih Petak & Jenis Kegiatan", list_combo_spk
         )
         new_spk_input = st.text_input("Nomor SPK Baru")
 
@@ -879,7 +879,7 @@ elif active_menu == "Rencana Kerja":
     with sub_tab_rencana:
       with st.form("form_buat_rencana"):
         selected_combo_r = st.selectbox(
-            "Pilih Petak & Jenis Kegiatan (Rencana)", list_combo
+            "🔍 Pilih Petak & Jenis Kegiatan (Rencana)", list_combo
         )
 
         col_rk1, col_rk2 = st.columns(2)
@@ -920,7 +920,7 @@ elif active_menu == "Rencana Kerja":
     with sub_tab_realisasi:
       with st.form("form_update_realisasi"):
         selected_combo_u = st.selectbox(
-            "Pilih Petak & Jenis Kegiatan (Realisasi)", list_combo
+            "🔍 Pilih Petak & Jenis Kegiatan (Realisasi)", list_combo
         )
 
         col_rl1, col_rl2 = st.columns(2)
