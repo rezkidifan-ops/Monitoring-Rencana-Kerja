@@ -28,7 +28,10 @@ div[data-testid="stToolbar"],
 #MainMenu,
 footer,
 .stAppHeader,
-[data-testid="stHeaderActionElements"] {
+[data-testid="stHeaderActionElements"],
+[data-testid="stFooter"],
+div.viewerBadge_container__1QSob,
+a[href*="streamlit.io/cloud"] {
     display: none !important;
     visibility: hidden !important;
     height: 0px !important;
@@ -207,11 +210,9 @@ SCHEDULE_RULES = [
     {"activity": "Chemical Weeding 7", "days_offset": 810, "label": "Umur 26-28 bulan"},
 ]
 
-# Inisialisasi Offline Queue di Session State
 if "offline_queue" not in st.session_state:
   st.session_state["offline_queue"] = []
 
-# JavaScript untuk Deteksi Koneksi & LocalStorage Offline Cache
 components.html(
     """
 <script>
@@ -319,7 +320,6 @@ def load_users():
     return pd.DataFrame(columns=USER_COLUMNS)
 
 
-# 4. INISIALISASI SESI LOGIN & NAVIGASI
 if "logged_in" not in st.session_state:
   st.session_state["logged_in"] = False
 if "user_pj" not in st.session_state:
@@ -345,9 +345,6 @@ EUCALYPTUS_SVG = """<svg class="eucalyptus-tree-svg" viewBox="0 0 100 100" fill=
 <ellipse cx="50" cy="8" rx="7" ry="3.5" transform="rotate(-90 50 8)" fill="#FFFFFF"/>
 </svg>"""
 
-# =========================================================
-# TAMPILAN LOGIN / REGISTRASI AKUN
-# =========================================================
 if not st.session_state["logged_in"]:
   st.markdown(
       f"""<div class="intro-banner-eucalyptus">
@@ -434,9 +431,6 @@ if not st.session_state["logged_in"]:
 
   st.stop()
 
-# =========================================================
-# DASHBOARD & OPERASIONAL UTAMA
-# =========================================================
 st.markdown(
     """<style>
 .stApp {
@@ -456,7 +450,6 @@ is_admin = (
 )
 role_badge = "Administrator" if is_admin else "Field Officer"
 
-# Fitur Sinkronisasi Otomatis/Manual Antrean Offline
 if st.session_state["offline_queue"]:
   st.warning(
       f"⚠️ Ada {len(st.session_state['offline_queue'])} data dalam antrean"
@@ -587,9 +580,6 @@ st.write("")
 
 active_menu = st.session_state["active_menu"]
 
-# =========================================================
-# KONTEN 1: INPUT ID PETAK
-# =========================================================
 if active_menu == "Input ID Petak":
   sub_tab_reg, sub_tab_spk, sub_tab_lama = st.tabs(
       [
@@ -905,9 +895,6 @@ if active_menu == "Input ID Petak":
   else:
     st.info("Belum ada data petak yang terdaftar.")
 
-# =========================================================
-# KONTEN 2: RENCANA KERJA
-# =========================================================
 elif active_menu == "Rencana Kerja":
   st.subheader("Rencana Kerja & Realisasi Operasional")
 
@@ -1077,9 +1064,6 @@ elif active_menu == "Rencana Kerja":
           hide_index=True,
       )
 
-# =========================================================
-# KONTEN 3: MONITORING & KALKULASI REMINDER KEGIATAN
-# =========================================================
 elif active_menu == "Monitoring":
   st.subheader("Monitoring")
   st.write("Pemantauan kegiatan, nomor SPK terdaftar, serta kalkulasi pengingat (reminder) kegiatan selanjutnya secara real-time.")
