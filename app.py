@@ -259,7 +259,6 @@ def safe_gsheets_update(worksheet_name, data_df):
     )
     return True
   except Exception as e:
-    # Jika gagal karena offline / jaringan terputus, masukkan ke antrean offline
     return False
 
 
@@ -287,7 +286,6 @@ def load_data():
 
     return df[COLUMNS]
   except Exception as e:
-    # Fallback offline: jika gagal load dari server, gunakan data kosong atau cache lokal
     return pd.DataFrame(columns=COLUMNS)
 
 
@@ -466,7 +464,6 @@ if st.session_state["offline_queue"]:
   )
   if st.button("🔄 Sinkronisasi Data ke Server Sekarang"):
     try:
-      # Coba sinkronkan antrean ke Sheet1
       current_df = load_data()
       for item in st.session_state["offline_queue"]:
         if item["type"] == "sheet1":
